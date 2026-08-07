@@ -1,0 +1,125 @@
+TASK
+- Find the best-performing neural network architecture for this task using a cost-aware NAS process that:
+  - Starts with a small candidate batch.
+  - Iteratively refines only the most promising architectures.
+  - Obeys all NAS process rules defined in the system message.
+
+TASK INPUTS
+- INPUT_SHAPE: {{ $json.ctx.input_shape }}
+- ACTIVATION_FUNCTION: {{ $json.ctx.output_activation }}
+- OUTPUT_NODES: {{ $json.ctx.output_nodes }}
+
+EXECUTION REQUIREMENTS
+
+- Phases:
+  - Follow the NAS operating approach:
+    - exploration → targeted_refinement → plateau_check → real_validation → finalization.
+  - You may jump back to exploration with a new hypothesis when needed, as defined in the system message.
+
+- Initial candidate batch:
+  - In the initial generation step, build 2 to 5 candidates total via repeated model-generator-mesh calls (mode=generate, one model per call).
+  - After each generator call:
+    - Immediately call model-evaluator with mode=zero-cost for the new model_ID.
+    - Then call D2 get-model-performance by model_ID and use DB results as the source of truth.
+
+- Follow-up variants:
+  - If the initial pool is insufficient, return to model-generator-mesh with ONE concrete refinement hypothesis.
+  - Generate 1 to 3 follow-up variants total using separate mode=refine calls (one model per call).
+  - After each variant:
+    - Run model-evaluator mode=zero-cost.
+    - Query D2 get-model-performance by model_ID and update ranking.
+
+- Zero-cost metrics:
+  - Use zero-cost metrics (GN, SN, GR, FI, JC, PL, SF, SFB) for exploration speed.
+  - Treat them as comparative ranking signals only, not direct final performance estimates.
+  - Use D2 evaluator comments/metrics to drive the next model-generator-mesh refinement hypothesis.
+
+- ID and metric handling:
+  - Never invent, guess, or fabricate model IDs, benchmark IDs, or metrics.
+  - Use only values returned by model-generator-mesh and D1/D2.
+  - Do not treat raw tool output text as evidence unless it is persisted in D1/D2.
+  - If an ID or metric is not present in D1/D2, it is unknown and must be retrieved via get-model-data / get-model-performance before use.
+
+- Mandatory training gate (promotion gate):
+  - Use model-evaluator mode=training for PROMOTION decisions only when ALL are true:
+    1. At least 3 distinct candidates have D2 evaluator records.
+    2. At least one targeted refinement cycle occurred after the initial batch.
+    3. Candidate ranking for promotion is based on comparative D2 records, not a single candidate impression.
+
+- Per-episode probe training (“no episode without training”):
+  - In every episode, if the episode is about to end (cap reached or explicit boundary) and no model-evaluator mode=training call has occurred yet:
+    - Select the least-risk / most promising candidate based on D2 evaluator records (balanced GN/SN/GR, no critical FI/JC/PL/SF/SFB failures, and best comments).
+    - Call model-evaluator with mode=training ONCE for that candidate as a probe, even if the mandatory training gate is not fully satisfied.
+    - Then log state and close the episode.
+  - Once the mandatory training gate is satisfied, additional training calls may be used within episodes as promotion training, subject to global cost constraints.
+
+- Trainer evaluation:
+  - After every model-evaluator mode=training call:
+    - Call D2 get-model-performance by model_benchmark_ID.
+    - Evaluate trainer evidence:
+      - Maximize testaccuracy.
+      - Treat train–test gap > 0.08 as overfitting risk.
+      - If trainer comments indicate instability or optimization failure, require refinement instead of finalization.
+  - If trainer evidence is weak or risky:
+    - Produce ONE architecture-level refinement hypothesis from D2 trainer comments.
+    - Send it to model-generator-mesh with mode=refine for 1 to 3 new variants and continue.
+
+- Finalization target:
+  - Never finalize a weak model.
+  - Default target: best D2 trainer testaccuracy ≥ 0.95 for normal finalization.
+  - Hard minimum floor: 0.85 testaccuracy, used only if task constraints or system limits force finalization below 0.95.
+  - Never finalize without real benchmark evidence from D2 trainer records.
+
+- Validation before finalization:
+  - Before final validation:
+    - Fetch the selected model architecture via D1 get-model-data by model_ID.
+    - Validate using model-architecture-validator with the exact D1-returned architecture spec verbatim (no placeholders or inferred text).
+  - If D1 spec is unavailable or malformed:
+    - Fix retrieval first and continue the loop; do not finalize.
+
+- Per-episode caps:
+  - At most 5 model-generator-mesh calls per episode.
+  - At most 5 model-evaluator calls per episode.
+  - If a cap is reached:
+    - Enforce the “no episode without training” rule above if no training has been run yet.
+    - Then stop further generator/evaluator calls in that episode.
+    - Call log_state to record the situation and your strategy.
+    - Continue in a new episode with a revised hypothesis.
+
+MEMORY & STATE REQUIREMENTS
+
+- At run start:
+  - Call retrieve_state.
+  - If no state exists, initialize with log_state and sessionstatus=exploration.
+
+- On each phase change:
+  - Optionally call get_episodes (created_at desc, limit 30) when additional detail is needed.
+  - Call log_state immediately with:
+    - summarytext: decision-focused summary of recent evidence and a concise strategy for the next iterations.
+    - summarystate: include sessionstatus, currentphase, previousphase, transitionreason, candidatesevaluatedcount, refinementcycles, bestmodel_ID, bestzerocostsnapshot, besttrainedmodel_ID, besttestaccuracy, lastbenchmark_ID, nextaction, generatorcalls, evaluatorcalls.
+
+- During active search:
+  - Ensure bestmodel_ID and besttestaccuracy are present and current in every log_state call.
+
+SELECTION RULES
+
+- Prefer candidates with balanced GN, SN, and GR.
+- Reject candidates with critical failures in FI, JC, PL, SF, or SFB unless a low-cost targeted fix is clear.
+- If two candidates are close, prefer:
+  - Lower structural risk.
+  - Stronger evaluator comments from D2.
+- If only one model has real training evidence and plateau is not clearly established, continue exploration/refinement instead of finalizing.
+- If a newly trained candidate does NOT beat the current best D2 trainer-backed testaccuracy with acceptable risk:
+  - Continue refinement/generation instead of finalizing.
+- Do not return non-final, partial, or refusal text. Keep searching until:
+  - Final JSON output is produced, OR
+  - Explicit system/tool limits force an incomplete-search final JSON.
+
+OUTPUT FORMAT
+
+- Follow the system message:
+  - Output only tool calls and one final JSON object.
+  - Final JSON MUST match:
+    - model_ID: string
+    - model_test_accuracy: number
+    - summary: string.

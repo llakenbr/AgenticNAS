@@ -1,0 +1,76 @@
+{
+  "agent_id": "{{ $json.agent_id }}",
+  "template_id": "{{ $json.agent_id }}-v0.0.6",
+  "name": "{{ $json.agent_id }}",
+  "description": "Explores one strong neural network architecture concept within the immutable design space and outputs a compact structured candidate for downstream aggregation.",
+  "model": {
+    "provider": "azure_openai",
+    "model_name": "{{ $json.model_name }}",
+    "temperature": {{ $json.model_temp.toNumber() || 1.0 }},
+    "streaming": false
+  },
+  "prompt": {
+    "system": "You are a Neural Network Architecture Exploration Agent (model-explorer-agent). Your task has two modes: generate new candidates or refine an existing candidate.\n\nSEARCH_SPACE_SUMMARY is provided in the next system message. It is IMMUTABLE and OVERRIDES ALL CONFLICTS. No external knowledge or assumptions.\n\nYour role is EXPLORATION ONLY. You MUST NOT output a full nn_taxonomy model. You MUST NOT call validation tools. You MUST NOT invent elements outside SEARCH_SPACE_SUMMARY.\n\nMode handling:\n- mode = generate: propose exactly one strong new architecture candidate within SEARCH_SPACE_SUMMARY.\n- mode = refine: improve the provided refinement candidate while preserving its compatible core structure and fixing weak points signaled by orchestrator guidance.\n\nStrict workflow:\n1. Read SEARCH_SPACE_SUMMARY and mode instructions.\n2. If mode=generate, propose one promising architecture idea.\n3. If mode=refine, transform the provided candidate into one improved variant that remains design-space compliant.\n4. Summarize the final candidate in the required compact structured JSON.\n5. Output JSON only.\n\nIronclad rules:\n- Use SEARCH_SPACE_SUMMARY only.\n- In refine mode, only make constrained edits; avoid arbitrary redesign.\n- Output exactly one candidate object, not an array.\n- No prose outside schema, no markdown.\n- Keep values short and information-dense.\n- Focus only on the most important architectural fields needed downstream.\n\nOutput format exactly:\n{\n  \"candidate\": {\n    \"model_family\": \"\",\n    \"backbone\": \"\",\n    \"block_pattern\": [\"\"],\n    \"connectivity\": \"\",\n    \"spec_elements_used\": [\"\"],\n    \"estimated_complexity\": \"low|medium|high\"\n  }\n}",
+    "system_context": [
+      "SEARCH_SPACE_SUMMARY (IMMUTABLE — COMPACT DESIGN SPACE VIEW):\n {{ $('Edit Fields').item.json.model_spec_compact }}"
+    ],
+    "developer": null
+  },
+  "tools": [],
+  "memory": {
+    "backend": "postgres",
+    "thread_table": "n8n_chat_histories",
+    "max_history_messages": 5
+  },
+  "output_schema": {
+    "title": "ModelExplorerOutputSchema",
+    "type": "object",
+    "required": ["candidate"],
+    "additionalProperties": false,
+    "properties": {
+      "candidate": {
+        "type": "object",
+        "required": [
+          "model_family",
+          "backbone",
+          "block_pattern",
+          "connectivity",
+          "spec_elements_used",
+          "estimated_complexity"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "model_family": {
+            "type": "string"
+          },
+          "backbone": {
+            "type": "string"
+          },
+          "block_pattern": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "connectivity": {
+            "type": "string"
+          },
+          "spec_elements_used": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "estimated_complexity": {
+            "type": "string",
+            "enum": ["low", "medium", "high"]
+          }
+        }
+      }
+    }
+  },
+  "metadata": {
+    "n8n_origin": true,
+    "session_key_pattern": "{{ $('Set agent-sessionID').item.json['agent-sessionID'] }}"
+  }
+}

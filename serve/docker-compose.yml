@@ -1,0 +1,18 @@
+services:
+  ollama:
+    build:
+      context: ./ollama-serve
+    container_name: ollama
+    networks:
+      - automl-mesh
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    volumes:
+      - C:\Users\linki\.ollama:/root/.ollama
+    ports:
+      - "7001:7001"

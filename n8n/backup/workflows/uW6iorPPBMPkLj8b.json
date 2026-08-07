@@ -1,0 +1,249 @@
+{
+  "updatedAt": "2026-07-21T10:51:18.153Z",
+  "createdAt": "2026-04-13T11:25:54.056Z",
+  "id": "uW6iorPPBMPkLj8b",
+  "name": "update-token-table",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "sessionID"
+            },
+            {
+              "name": "totalTokens",
+              "type": "number"
+            },
+            {
+              "name": "promptTokens",
+              "type": "number"
+            },
+            {
+              "name": "completionTokens",
+              "type": "number"
+            },
+            {
+              "name": "sourceAgent"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "cb9b4786-270d-4f6f-833f-aad5b873e2ed",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "CfScpscmUfbO2dTL",
+          "mode": "list",
+          "cachedResultName": "token-consumption",
+          "cachedResultUrl": "/projects/EqTnf87AG5HyB5dF/datatables/CfScpscmUfbO2dTL"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "sessionID",
+              "keyValue": "={{ $json.sessionID }}"
+            },
+            {
+              "keyName": "agent",
+              "keyValue": "={{ $('When Executed by Another Workflow').item.json.sourceAgent }}"
+            }
+          ]
+        },
+        "limit": 1
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "af456761-cedc-48f1-99a4-80dbcc209a79",
+      "name": "Get row(s)"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "CfScpscmUfbO2dTL",
+          "mode": "list",
+          "cachedResultName": "token-consumption",
+          "cachedResultUrl": "/projects/EqTnf87AG5HyB5dF/datatables/CfScpscmUfbO2dTL"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "sessionID",
+              "keyValue": "={{ $('When Executed by Another Workflow').item.json.sessionID }}"
+            },
+            {
+              "keyName": "agent",
+              "keyValue": "={{ $('When Executed by Another Workflow').item.json.sourceAgent }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "sessionID": "={{ $('When Executed by Another Workflow').item.json.sessionID }}",
+            "totalTokens": "={{ $json.totalTokens + $('When Executed by Another Workflow').item.json.totalTokens}}",
+            "promptTokens": "={{ $json.promptTokens + $('When Executed by Another Workflow').item.json.promptTokens}}",
+            "completionTokens": "={{ $json.completionTokens + $('When Executed by Another Workflow').item.json.completionTokens}}",
+            "agent": "={{ $('When Executed by Another Workflow').item.json.sourceAgent }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "sessionID",
+              "displayName": "sessionID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "totalTokens",
+              "displayName": "totalTokens",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "promptTokens",
+              "displayName": "promptTokens",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "completionTokens",
+              "displayName": "completionTokens",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "agent",
+              "displayName": "agent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "bec6645a-643f-401e-bebb-d0ab4919be6e",
+      "name": "Update row(s)"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s)": {
+      "main": [
+        [
+          {
+            "node": "Update row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "sessionID": "test",
+          "totalTokens": 0,
+          "promptTokens": 0,
+          "completionTokens": 0,
+          "sourceAgent": "test"
+        }
+      }
+    ]
+  },
+  "versionId": "e3ae0158-4cdc-4bac-bc17-f1c855a32fb0",
+  "activeVersionId": "e3ae0158-4cdc-4bac-bc17-f1c855a32fb0",
+  "versionCounter": 108,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-04-13T11:25:54.056Z",
+      "createdAt": "2026-04-13T11:25:54.056Z",
+      "role": "workflow:owner",
+      "workflowId": "uW6iorPPBMPkLj8b",
+      "projectId": "EqTnf87AG5HyB5dF",
+      "project": {
+        "updatedAt": "2026-03-14T17:21:54.570Z",
+        "createdAt": "2026-03-14T17:05:46.633Z",
+        "id": "EqTnf87AG5HyB5dF",
+        "name": "Luca Lakenbrink <luca.lakenbrink@fom-net.de>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "cd08fa2f-3e6c-4bf5-8905-bbf2d09f907c"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": "Version e3ae0158",
+    "description": ""
+  }
+}

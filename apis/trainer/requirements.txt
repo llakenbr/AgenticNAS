@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+torch
+pydantic
+PyYAML
+toonify>=1.6.0

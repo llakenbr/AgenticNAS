@@ -1,0 +1,1159 @@
+{
+  "updatedAt": "2026-04-13T12:08:58.536Z",
+  "createdAt": "2026-03-14T17:23:50.781Z",
+  "id": "yRBqq60TZkdSU3HCKVB-5",
+  "name": "Ochestrator",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Model generation",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "input_shape",
+              "placeholder": "[32, 3, 32, 32]",
+              "defaultValue": "[32, 3, 32, 32]"
+            },
+            {
+              "fieldLabel": "output_activation",
+              "placeholder": "Softmax",
+              "defaultValue": "Softmax"
+            },
+            {
+              "fieldLabel": "output_nodes",
+              "defaultValue": "10"
+            },
+            {
+              "fieldLabel": "dataset",
+              "defaultValue": "cifar10"
+            },
+            {
+              "fieldLabel": "Max. Iterations",
+              "fieldType": "number",
+              "defaultValue": "25"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        -672,
+        -112
+      ],
+      "id": "74ae50cf-50b8-4610-84e4-bad816f9fd45",
+      "name": "On form submission",
+      "webhookId": "3d38a243-11d9-41fc-8945-7c8f9d9f8012"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=TASK:\n- Find the optimal neural network architecture for:\n\nINPUT_SHAPE: {{ $('Set_Inputs').item.json.input_shape }}\nACTIVATION_FUNCTION: {{ $('Set_Inputs').item.json.output_activation }}\nOUTPUT_NODES: {{ $('Set_Inputs').item.json.output_nodes }}\n\nAGENT MESH CAPABILITIES:\n1. model-generator: Generates candidate architectures.\n2. model-evaluator: Benchmarks candidate architectures and returns metrics (GN, SN, GR, FI, JC, PL, SF, SFB).\n3. model-trainer: Runs real training/benchmarking and creates a model_benchmark_id for performance lookup.\n\nGUIDELINES:\n- Always dedicate operations to your AGENT MESH.\n- Use an exploration-first strategy with plateau detection:\n  - Generate candidate models continuously and evaluate with model-evaluator.\n  - Track metric trends (especially GN, SN, GR as primary indicators) across all candidates.\n  - Maintain a record of the best candidate found at each stage.\n- Plateau detection: Stop zero-cost exploration and move to real training when:\n  - Over the last 2-3 iterations, no significant improvement in key metrics (< 5% improvement threshold).\n  - Refinement guidance suggests diminishing returns.\n  - The best candidate is stable with balanced metrics (no critical weaknesses).\n- Use metrics to guide refinement:\n  - Gradient issues (GN/SN degradation) → adjust depth/normalization/activations.\n  - Representation collapse (GR low) → adjust layer widths or add skip connections.\n  - Dead paths (SF/SFB=0) → modify activations or initialization.\n- Once plateau is detected, select the best candidate and run model-trainer for real benchmark validation.\n- If real performance is weak, continue refinement and re-evaluate in zero-cost loop.\n- Never finalize based only on zero-cost metrics; always validate with real training.\n- Continue the loop internally; only return the final model ID after real benchmark confirmation.\n\nOUTPUT in JSON:\n{\n\t\"model_ID\": {\n      \"type\": \"String\",\n      \"description\": \"The final validated model ID (after real benchmark confirmation).\"\n    },\n    \"model_test_accuracy\": {\n      \"type\": \"Float\",\n      \"description\": \"The test accuracy of the final validated model.\"\n    },\n    \"summary\": {\n      \"type\": \"String\",\n      \"description\": \"Short summary of the model.\"\n    }\n}\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are a Neural Architecture Search (NAS) Orchestrator agent.\n\nTask:\n- Search and identify the best-performing neural network architecture for a given task.\n- Use a two-stage process: zero-cost exploration with plateau detection, then real training benchmark validation before finalizing.\n- The final output MUST be the final model ID of a fully refined architecture that is valid under ARCHITECTURE_SPEC.\n\nAgents/tools you can use:\nA1. **model-generator**: generates candidate models based on inputs, output shape, and optional activation function. You can provide guidance to refine generated models.\nA2. **model-evaluator**: evaluates candidate models and returns zero-cost performance metrics: GN, SN, GR, FI, JC, PL, SF, SFB.\nA3. **model-trainer**: performs real training/benchmarking for a selected candidate and creates a model_benchmark_id for performance lookup.\nT1. **model-architecture-validator**: Send the full JSON model architecture for validation.\nD1. **get-model-data**: Get information about a model by model ID.\nD2. **get-model-performance**: Get performance results and comments by model ID (model-evaluator and model-trainer results).\n\n\nWorkflow:\n1. Advise the model generator to produce a candidate model.\n2. Evaluate the model with model-evaluator (provide model ID).\n3. Record the zero-cost metrics (query from D2) and compare against the best candidate found so far.\n4. Detect plateau or diminishing returns:\n   - If significant improvement exists (targets indicate refinement directions), guide model-generator to enhance.\n   - If no improvement or minimal gains over recent iterations (plateau detected), proceed to real benchmarking.\n5. Repeat generation and zero-cost evaluation until plateau is detected (no significant metric improvements expected).\n6. Select the best-performing candidate model from the plateau phase.\n7. Run model-trainer on the selected best model to get real performance.\n8. Query D2 with the model_benchmark_id and review real benchmark metrics/comments:\n   - If real performance is strong and the architecture is stable, keep this candidate as final.\n   - If real performance is weak or regressions appear, continue refinement with targeted improvements and return to zero-cost loop.\n9. Before returning, validate the final architecture JSON with model-architecture-validator.\n10. Return only the final model ID.\nTrack metric trends across iterations; only transition to real training when improvements plateau.\n- Plateau is defined as: no significant improvement in key metrics (e.g., GN, SN, GR over 2-3 consecutive iterations).\n-\nRules:\n- Use zero-cost metrics for exploration speed, but never finalize without real benchmark evidence.\n- Each iteration must be justified by metrics/comments from D2.\n- Prefer targeted, minimal architecture changes between iterations.\n- Always validate the final architecture with model-architecture-validator before returning.\n- Output only the final model ID.",
+          "maxIterations": "={{ $('Set_Inputs').item.json['Max. Iterations'] }}",
+          "returnIntermediateSteps": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1424,
+        -112
+      ],
+      "id": "3f175a1e-6957-4325-8260-ad7f65510de3",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://model-faciliator:7002/create_base_spec",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "input_shape",
+              "value": "={{ $('Set_Inputs').item.json.input_shape }}"
+            },
+            {
+              "name": "output_shape",
+              "value": "=[1, {{ $('Set_Inputs').item.json.output_nodes }}]"
+            },
+            {
+              "name": "output_activation",
+              "value": "={{ $('Set_Inputs').item.json.output_activation }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text",
+              "outputPropertyName": "blank_model"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        224,
+        -112
+      ],
+      "id": "ee4297c0-6828-4d23-9335-b078a001b218",
+      "name": "Generated init model"
+    },
+    {
+      "parameters": {
+        "url": "http://model-faciliator:7002/get_spec_options",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text",
+              "outputPropertyName": "model_spec_options"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        0,
+        -112
+      ],
+      "id": "a16dac2a-5087-45e8-a024-28c257958b0a",
+      "name": "Get model_spec"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Set_Inputs').item.json.sessionID }}-ochestrator",
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        1232,
+        112
+      ],
+      "id": "729ec9d8-6b84-43fe-84e9-6918249579d2",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "EToifuel9TOlc6yo",
+          "name": "n8n_user"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Database Calls",
+        "height": 224,
+        "width": 272
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2048,
+        240
+      ],
+      "typeVersion": 1,
+      "id": "a4d5ad63-aec4-4605-abaf-0302572b252d",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Tool to validate a ARCHITECTURE_SPEC model",
+        "method": "POST",
+        "url": "http://model-faciliator:7002/validate",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "spec",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', `nn_taxonomy JSON (not escaped), do not include other DB fields e.g. name in the request`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        1824,
+        304
+      ],
+      "id": "7be475ea-6d69-4cb7-8c88-86e3606dfca9",
+      "name": "model-architecture-validator"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Get information about a model by model id",
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "model_benchmarks",
+          "mode": "list",
+          "cachedResultName": "model_benchmarks"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "model_id",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('values0_Value', `Unique model ID`, 'string') }}"
+            },
+            {
+              "column": "id",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('values1_Value', `or model_benchmark_id`, 'string') }}"
+            }
+          ]
+        },
+        "combineConditions": "OR",
+        "sort": {
+          "values": []
+        },
+        "options": {
+          "outputColumns": [
+            "benchmark_name",
+            "metrics",
+            "model_remarks"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        2080,
+        304
+      ],
+      "id": "ebd70b7a-7403-4d47-b0b9-f321b5aedfb7",
+      "name": "get-model-performance",
+      "credentials": {
+        "postgres": {
+          "id": "MTKdQt9xBfmirQQt",
+          "name": "model_db"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Get information about a model by model id.",
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "models",
+          "mode": "list",
+          "cachedResultName": "models"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "id",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('values0_Value', `Unique model ID`, 'string') }}"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "name",
+            "status",
+            "nn_taxonomy",
+            "extra_meta"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        2208,
+        304
+      ],
+      "id": "a2520d00-4d7a-4be1-8968-4238760bbaee",
+      "name": "get-model-data",
+      "credentials": {
+        "postgres": {
+          "id": "MTKdQt9xBfmirQQt",
+          "name": "model_db"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "grok-4-fast-reasoning",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        224
+      ],
+      "id": "0b973b3b-a36a-4f8f-b347-454ffd4ea471",
+      "name": "Azure grok-4-fast-reasoning",
+      "credentials": {
+        "azureOpenAiApi": {
+          "id": "vuyHHFR79qfaFdDD",
+          "name": "Azure Open AI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "gpt-5.3-chat",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        1056,
+        112
+      ],
+      "id": "72029b83-d98c-4c0f-895a-0fdf95105880",
+      "name": "Azure gpt-5.3-chat",
+      "credentials": {
+        "azureOpenAiApi": {
+          "id": "vuyHHFR79qfaFdDD",
+          "name": "Azure Open AI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "BFme6hg35sFMNXzD",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/BFme6hg35sFMNXzD",
+          "cachedResultName": "create-model-generator"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "sessionID": "={{ $('Set_Inputs').item.json.sessionID }}",
+            "input_shape": "={{ $('Set_Inputs').item.json.input_shape }}",
+            "output_activation": "={{ $('Set_Inputs').item.json.output_activation }}",
+            "output_nodes": "={{ $('Set_Inputs').item.json.output_nodes }}",
+            "model_spec_options": "={{ $('Get model_spec').item.json.model_spec_options }}",
+            "blank_model": "={{ $json.blank_model }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "sessionID",
+              "displayName": "sessionID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "input_shape",
+              "displayName": "input_shape",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "output_activation",
+              "displayName": "output_activation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "output_nodes",
+              "displayName": "output_nodes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "model_spec_options",
+              "displayName": "model_spec_options",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "blank_model",
+              "displayName": "blank_model",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        656,
+        -112
+      ],
+      "id": "535a16f6-76a2-46cc-a485-6e915d2f74aa",
+      "name": "Call 'create-model-generator'"
+    },
+    {
+      "parameters": {
+        "description": "Generates candidate models based on inputs, output shape, and optional activation function. You can provide guidance to refine generated models. Outputs the model ID in the database",
+        "workflowId": {
+          "__rl": true,
+          "value": "4XWSDpzKyZfQKNoO",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/4XWSDpzKyZfQKNoO",
+          "cachedResultName": "model-generator-v2"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chatInput": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('chatInput', `Message to the model-generator`, 'string') }}",
+            "sessionID": "={{ $('Set_Inputs').item.json.sessionID }}",
+            "input_shape": "={{ $('Set_Inputs').item.json.input_shape }}",
+            "output_activation": "={{ $('Set_Inputs').item.json.output_activation }}",
+            "output_nodes": "={{ $('Set_Inputs').item.json.output_nodes }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "chatInput",
+              "displayName": "chatInput",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "sessionID",
+              "displayName": "sessionID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "input_shape",
+              "displayName": "input_shape",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "output_activation",
+              "displayName": "output_activation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "output_nodes",
+              "displayName": "output_nodes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1360,
+        304
+      ],
+      "id": "2030e60b-93be-41de-8366-6492fc0bbba0",
+      "name": "Call 'model-generator'"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "kvOgZpOyvnwtch58",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/kvOgZpOyvnwtch58",
+          "cachedResultName": "create-model-evaluator"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "sessionID": "={{ $('Set_Inputs').item.json.sessionID }}"
+          },
+          "matchingColumns": [
+            "sessionID"
+          ],
+          "schema": [
+            {
+              "id": "sessionID",
+              "displayName": "sessionID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        880,
+        -112
+      ],
+      "id": "659fcbf4-b862-42ed-a9c5-15028eed8ce1",
+      "name": "Call 'create-model-evaluator'"
+    },
+    {
+      "parameters": {
+        "description": "Evaluates candidate models and returns zero-cost performance metrics: GN, SN, GR, FI, JC, PL, SF, SFB.",
+        "workflowId": {
+          "__rl": true,
+          "value": "8vfKXgNUUbu7q4DH",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/8vfKXgNUUbu7q4DH",
+          "cachedResultName": "model-evaluator-v2"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "model_ID": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('model_ID', `Model ID (passed from model-generator)`, 'string') }}",
+            "input_shape": "={{ $('Set_Inputs').item.json.input_shape }}",
+            "batch_size": "={{ $('Set_Inputs').item.json.batch_size }}",
+            "sessionID": "={{ $('Set_Inputs').item.json.sessionID }}",
+            "output_nodes": "={{ $('Set_Inputs').item.json.output_nodes }}",
+            "dataset": "={{ $('Set_Inputs').item.json.dataset }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "sessionID",
+              "displayName": "sessionID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "model_ID",
+              "displayName": "model_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "input_shape",
+              "displayName": "input_shape",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "dataset",
+              "displayName": "dataset",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "batch_size",
+              "displayName": "batch_size",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "output_nodes",
+              "displayName": "output_nodes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1488,
+        304
+      ],
+      "id": "951f2264-1d49-45a4-9c8e-9422f4c65e65",
+      "name": "Call 'model-evaluator'"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8f630a34-1ea1-433c-adfd-e4627499b27e",
+              "name": "batch_size",
+              "value": "={{ JSON.parse($json.input_shape)[0] }}",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -224,
+        -112
+      ],
+      "id": "d76a1505-05e1-4daa-b098-a67ec8e86a9c",
+      "name": "Set_Inputs"
+    },
+    {
+      "parameters": {
+        "value": "={{ $json.submittedAt }}-{{ $json.input_shape}}-{{ $json.output_nodes }}",
+        "dataPropertyName": "sessionID"
+      },
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        -112
+      ],
+      "id": "91f35025-30fe-4f7a-aafe-9612040d5d65",
+      "name": "Set_ID"
+    },
+    {
+      "parameters": {
+        "description": "model-trainer tool to train the final model and test its performance. Depending on the output, reevaluate and enhance the model.\n",
+        "workflowId": {
+          "__rl": true,
+          "value": "HcFkjemOJn392L4w",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/HcFkjemOJn392L4w",
+          "cachedResultName": "model-trainer"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "epochs": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('epochs', `epochs for training`, 'number') }}",
+            "sessionID": "={{ $('Set_ID').item.json.sessionID }}",
+            "model_ID": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('model_ID', `model_ID of to-be tested model`, 'string') }}",
+            "dataset_name": "={{ $('Set_Inputs').item.json.dataset }}",
+            "optimizer": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('optimizer', `optimizer name after \"torch.optim\" default value \"AdamW\"`, 'string') }}",
+            "loss_function": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('loss_function', `loss_function name after \"torch.nn\" e.g. value \"CrossEntropyLoss\"`, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "sessionID",
+              "displayName": "sessionID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "model_ID",
+              "displayName": "model_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "dataset_name",
+              "displayName": "dataset_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "loss_function",
+              "displayName": "loss_function",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "optimizer",
+              "displayName": "optimizer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "epochs",
+              "displayName": "epochs",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1616,
+        304
+      ],
+      "id": "c4b217ae-efb1-4753-873a-12d743d9898e",
+      "name": "Call 'model-trainer'"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n\t\"model_ID\": {\n      \"type\": \"String\",\n      \"description\": \"The final validated model ID (after real benchmark confirmation).\"\n    },\n    \"model_test_accuracy\": {\n      \"type\": \"Float\",\n      \"description\": \"The test accuracy of the final validated model.\"\n    },\n    \"summary\": {\n      \"type\": \"String\",\n      \"description\": \"Short summary of the model.\"\n    }\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2368,
+        112
+      ],
+      "id": "825d2ab3-d23c-42fe-83a0-6e5661ab962a",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "model": "gpt-5.4-mini",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        2368,
+        240
+      ],
+      "id": "564d78a9-e1fb-469c-9fe2-43399f86722c",
+      "name": "Azure gpt-5.4-mini",
+      "credentials": {
+        "azureOpenAiApi": {
+          "id": "vuyHHFR79qfaFdDD",
+          "name": "Azure Open AI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "CfScpscmUfbO2dTL",
+          "mode": "list",
+          "cachedResultName": "token-consumption",
+          "cachedResultUrl": "/projects/EqTnf87AG5HyB5dF/datatables/CfScpscmUfbO2dTL"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "sessionID",
+              "keyValue": "={{ $('Set_ID').item.json.sessionID }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "sessionID": "={{ $('Set_ID').item.json.sessionID }}",
+            "totalTokens": 0,
+            "promptTokens": 0,
+            "completionTokens": 0
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "sessionID",
+              "displayName": "sessionID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "totalTokens",
+              "displayName": "totalTokens",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "promptTokens",
+              "displayName": "promptTokens",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "completionTokens",
+              "displayName": "completionTokens",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        432,
+        -112
+      ],
+      "id": "c85457d9-610e-423b-b86a-c3d70132d844",
+      "name": "Create total token row"
+    }
+  ],
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Set_ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generated init model": {
+      "main": [
+        [
+          {
+            "node": "Create total token row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get model_spec": {
+      "main": [
+        [
+          {
+            "node": "Generated init model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        []
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "model-architecture-validator": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get-model-performance": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get-model-data": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Azure grok-4-fast-reasoning": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Azure gpt-5.3-chat": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'create-model-generator'": {
+      "main": [
+        [
+          {
+            "node": "Call 'create-model-evaluator'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'model-generator'": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'create-model-evaluator'": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'model-evaluator'": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set_Inputs": {
+      "main": [
+        [
+          {
+            "node": "Get model_spec",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set_ID": {
+      "main": [
+        [
+          {
+            "node": "Set_Inputs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'model-trainer'": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Azure gpt-5.4-mini": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create total token row": {
+      "main": [
+        [
+          {
+            "node": "Call 'create-model-generator'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "30c8c4e1-2668-4812-aa5a-bbac7839c18c",
+  "activeVersionId": "db260609-70b8-440b-8536-4512076bca2f",
+  "versionCounter": 737,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-03-14T17:23:50.781Z",
+      "createdAt": "2026-03-14T17:23:50.781Z",
+      "role": "workflow:owner",
+      "workflowId": "yRBqq60TZkdSU3HCKVB-5",
+      "projectId": "EqTnf87AG5HyB5dF",
+      "project": {
+        "updatedAt": "2026-03-14T17:21:54.570Z",
+        "createdAt": "2026-03-14T17:05:46.633Z",
+        "id": "EqTnf87AG5HyB5dF",
+        "name": "Luca Lakenbrink <luca.lakenbrink@fom-net.de>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "cd08fa2f-3e6c-4bf5-8905-bbf2d09f907c"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

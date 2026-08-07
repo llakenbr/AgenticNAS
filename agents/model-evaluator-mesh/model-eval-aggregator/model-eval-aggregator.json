@@ -1,0 +1,229 @@
+{
+  "agent_id": "model-eval-aggregator",
+  "template_id": "model-eval-aggregator-v0.0.2",
+  "name": "Model Evaluation Aggregator",
+  "description": "Aggregates evaluations of neural network architectures by democratic selection of evaluation results.",
+  "model": {
+    "provider": "azure_openai",
+    "model_name": "{{ $json.model_name }}",
+    "temperature": {{ $json.model_temp.toNumber() || 1.0 }},
+    "streaming": false
+  },
+  "prompt": {
+    "system": "You are a democratic neural network evaluation aggregator. Output JSON only; any non-JSON output is invalid.\n\nRole:\n- Ingest a list of evaluator JSON outputs that already follow the shared evaluator schema.\n- Consolidate them by majority vote across matching metrics, statuses, interpretations, and remarks.\n- Preserve the same top-level output schema so downstream consumers can reuse it unchanged.\n\nContract:\n- Top-level keys exactly: run_label (optional), metrics (required), model_remarks (optional).\n- No extra top-level keys.\n- Keep every field terse and technical.\n- Include only metrics present in the input list.\n- Omit model_remarks when the evaluator list is sparse or does not show a clear consensus.\n\nAggregation rules:\n- Treat each evaluator output as one vote.\n- For each metric, prefer the most common non-null raw value when available.\n- For status, interpretation, and evidence_role, use the consensus value seen in the majority of matching evaluator outputs.\n- If there is no clear majority for a metric, choose the most conservative valid status and shorten the interpretation to the shared technical core.\n- Do not invent metrics that are absent from the input list.\n- Do not average categorical judgments.\n- When the input mix includes both zero-cost and training outputs, keep the same mode boundary as the source metrics and never mix their judgments in one metric.\n\nModes:\n- zero-cost: interpret GN, SN, GR, FI, JC, PL, SF, SFB as comparative proxy signals only. Do not claim final accuracy from them.\n- training: interpret train_loss, train_accuracy, test_loss, and test_accuracy only. Use lower loss and higher accuracy as better evidence.\n- In training mode, use train-test gaps to judge overfitting, underfitting, and generalization.\n- Never mix zero-cost and training judgments.\n\nMetric output:\n- Each metric object must contain raw, status, interpretation, and evidence_role.\n- Use short interpretations and short evidence roles.\n- Status is relative to the current mode, not an absolute quality label.\n\nRemarks:\n- Keep summary to three short phrases.\n- Emit at most 2 priority issues.\n- Each issue must cite at least 1 metric and one concrete architectural modification.\n- Prefer omission over weak commentary.\n- Only include priority issues when multiple evaluators converge on the same failure pattern.\n\nMetric guide:\nGN: gradient strength/flow; extreme values imply vanishing or exploding gradients.\nSN: parameter saliency; low can indicate redundancy.\nGR: pruning sensitivity; nonpositive values imply fragility.\nFI: parameter sensitivity; very low can indicate dead or underfit paths.\nJC: representation diversity; pathological values can indicate collapse.\nPL: baseline trainability.\nSF: global trainability; 0 can indicate untrainable paths.\nSFB: BN-aware trainability; 0 can indicate blocked BN paths.\n\nIssue types:\n- zero-cost: bottleneck, depth_width_imbalance, activation_normalization_issue, feature_collapse, redundancy, gradient_problem, optimization_fragility, dead_path_risk.\n- training: overfitting_risk, underfitting, generalization_gap, convergence_issue, optimization_fragility.",
+    "system_context": [],
+    "developer": null
+  },
+  "tools": [],
+  "memory": {
+    "backend": "postgres",
+    "thread_table": "n8n_chat_histories",
+    "max_history_messages": 5,
+    "max_context_tokens": 220000
+  },
+  "output_schema": {
+    "title": "ModelEvaluatorOutput",
+    "type": "object",
+    "required": ["metrics"],
+    "properties": {
+      "run_label": {
+        "type": "string",
+        "description": "Optional run label stored in the DB name column."
+      },
+      "metrics": {
+        "type": "object",
+        "description": "Structured evaluator metrics stored as JSONB.",
+        "additionalProperties": false,
+        "properties": {
+          "GN": {
+            "type": "object",
+            "properties": {
+              "raw": { "type": ["number", "null"] },
+              "status": { "type": "string", "enum": ["high", "medium", "low", "critical", "unknown"] },
+              "interpretation": { "type": "string", "maxLength": 100 },
+              "evidence_role": { "type": "string", "maxLength": 100 }
+            },
+            "required": ["status", "interpretation", "evidence_role"],
+            "additionalProperties": false
+          },
+          "train_loss": {
+            "type": "object",
+            "properties": {
+              "raw": { "type": ["number", "null"] },
+              "status": { "type": "string", "enum": ["high", "medium", "low", "critical", "unknown"] },
+              "interpretation": { "type": "string", "maxLength": 100 },
+              "evidence_role": { "type": "string", "maxLength": 100 }
+            },
+            "required": ["status", "interpretation", "evidence_role"],
+            "additionalProperties": false
+          },
+          "train_accuracy": {
+            "type": "object",
+            "properties": {
+              "raw": { "type": ["number", "null"] },
+              "status": { "type": "string", "enum": ["high", "medium", "low", "critical", "unknown"] },
+              "interpretation": { "type": "string", "maxLength": 100 },
+              "evidence_role": { "type": "string", "maxLength": 100 }
+            },
+            "required": ["status", "interpretation", "evidence_role"],
+            "additionalProperties": false
+          },
+          "test_loss": {
+            "type": "object",
+            "properties": {
+              "raw": { "type": ["number", "null"] },
+              "status": { "type": "string", "enum": ["high", "medium", "low", "critical", "unknown"] },
+              "interpretation": { "type": "string", "maxLength": 100 },
+              "evidence_role": { "type": "string", "maxLength": 100 }
+            },
+            "required": ["status", "interpretation", "evidence_role"],
+            "additionalProperties": false
+          },
+          "test_accuracy": {
+            "type": "object",
+            "properties": {
+              "raw": { "type": ["number", "null"] },
+              "status": { "type": "string", "enum": ["high", "medium", "low", "critical", "unknown"] },
+              "interpretation": { "type": "string", "maxLength": 100 },
+              "evidence_role": { "type": "string", "maxLength": 100 }
+            },
+            "required": ["status", "interpretation", "evidence_role"],
+            "additionalProperties": false
+          },
+          "SN": {
+            "type": "object",
+            "properties": {
+              "raw": { "type": ["number", "null"] },
+              "status": { "type": "string", "enum": ["high", "medium", "low", "critical", "unknown"] },
+              "interpretation": { "type": "string", "maxLength": 100 },
+              "evidence_role": { "type": "string", "maxLength": 100 }
+            },
+            "required": ["status", "interpretation", "evidence_role"],
+            "additionalProperties": false
+          },
+          "GR": {
+            "type": "object",
+            "properties": {
+              "raw": { "type": ["number", "null"] },
+              "status": { "type": "string", "enum": ["high", "medium", "low", "critical", "unknown"] },
+              "interpretation": { "type": "string", "maxLength": 100 },
+              "evidence_role": { "type": "string", "maxLength": 100 }
+            },
+            "required": ["status", "interpretation", "evidence_role"],
+            "additionalProperties": false
+          },
+          "FI": {
+            "type": "object",
+            "properties": {
+              "raw": { "type": ["number", "null"] },
+              "status": { "type": "string", "enum": ["high", "medium", "low", "critical", "unknown"] },
+              "interpretation": { "type": "string", "maxLength": 100 },
+              "evidence_role": { "type": "string", "maxLength": 100 }
+            },
+            "required": ["status", "interpretation", "evidence_role"],
+            "additionalProperties": false
+          },
+          "JC": {
+            "type": "object",
+            "properties": {
+              "raw": { "type": ["number", "null"] },
+              "status": { "type": "string", "enum": ["high", "medium", "low", "critical", "unknown"] },
+              "interpretation": { "type": "string", "maxLength": 100 },
+              "evidence_role": { "type": "string", "maxLength": 100 }
+            },
+            "required": ["status", "interpretation", "evidence_role"],
+            "additionalProperties": false
+          },
+          "PL": {
+            "type": "object",
+            "properties": {
+              "raw": { "type": ["number", "null"] },
+              "status": { "type": "string", "enum": ["high", "medium", "low", "critical", "unknown"] },
+              "interpretation": { "type": "string", "maxLength": 100 },
+              "evidence_role": { "type": "string", "maxLength": 100 }
+            },
+            "required": ["status", "interpretation", "evidence_role"],
+            "additionalProperties": false
+          },
+          "SF": {
+            "type": "object",
+            "properties": {
+              "raw": { "type": ["number", "null"] },
+              "status": { "type": "string", "enum": ["high", "medium", "low", "critical", "unknown"] },
+              "interpretation": { "type": "string", "maxLength": 100 },
+              "evidence_role": { "type": "string", "maxLength": 100 }
+            },
+            "required": ["status", "interpretation", "evidence_role"],
+            "additionalProperties": false
+          },
+          "SFB": {
+            "type": "object",
+            "properties": {
+              "raw": { "type": ["number", "null"] },
+              "status": { "type": "string", "enum": ["high", "medium", "low", "critical", "unknown"] },
+              "interpretation": { "type": "string", "maxLength": 100 },
+              "evidence_role": { "type": "string", "maxLength": 100 }
+            },
+            "required": ["status", "interpretation", "evidence_role"],
+            "additionalProperties": false
+          }
+        },
+        "minProperties": 1
+      },
+      "model_remarks": {
+        "type": "object",
+        "description": "Optional concise diagnostic remarks stored as JSONB.",
+        "properties": {
+          "summary": {
+            "type": "object",
+            "properties": {
+              "trainability": { "type": "string", "maxLength": 40 },
+              "convergence": { "type": "string", "maxLength": 40 },
+              "generalization": { "type": "string", "maxLength": 40 }
+            },
+            "required": ["trainability", "convergence", "generalization"],
+            "additionalProperties": false
+          },
+          "priority_issues": {
+            "type": "array",
+            "maxItems": 2,
+            "items": {
+              "type": "object",
+              "properties": {
+                "issue": { "type": "string", "maxLength": 50 },
+                "severity": { "type": "string", "enum": ["high", "medium", "low"] },
+                "confidence": { "type": "string", "enum": ["high", "medium", "low"] },
+                "metric_evidence": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 2,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "metric": { "type": "string", "pattern": "^(GN|SN|GR|FI|JC|PL|SF|SFB|train_loss|train_accuracy|test_loss|test_accuracy)$" },
+                      "reason": { "type": "string", "maxLength": 80 }
+                    },
+                    "required": ["metric", "reason"],
+                    "additionalProperties": false
+                  }
+                },
+                "diagnosis": { "type": "string", "maxLength": 120 },
+                "targeted_modification": { "type": "string", "maxLength": 80 },
+                "expected_effect": { "type": "string", "maxLength": 80 }
+              },
+              "required": ["issue", "severity", "confidence", "metric_evidence", "diagnosis", "targeted_modification", "expected_effect"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["summary"],
+        "additionalProperties": false
+      }
+    },
+    "additionalProperties": false
+  },
+  "metadata": {
+    "n8n_origin": true,
+    "session_key_pattern": "{{ $('Set agent-sessionID').item.json['agent-sessionID'] }}"
+  }
+}

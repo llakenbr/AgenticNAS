@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+numpy
+toonify>=1.6.0
+pydantic
+pydantic-settings
+sqlalchemy
+psycopg[binary]
+
+requests

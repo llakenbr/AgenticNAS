@@ -1,0 +1,1943 @@
+{
+  "updatedAt": "2026-07-21T18:58:30.751Z",
+  "createdAt": "2026-05-17T09:03:52.560Z",
+  "id": "Aa0UhnE5CNTh17ly",
+  "name": "Ochestrator-v7",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Model generation",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "input_shape",
+              "placeholder": "[256, 3, 32, 32]",
+              "defaultValue": "[256, 3, 32, 32]"
+            },
+            {
+              "fieldLabel": "output_activation",
+              "placeholder": "Softmax",
+              "defaultValue": "Softmax"
+            },
+            {
+              "fieldLabel": "output_nodes",
+              "defaultValue": "10"
+            },
+            {
+              "fieldLabel": "dataset",
+              "defaultValue": "cifar10"
+            },
+            {
+              "fieldLabel": "Max. Iterations",
+              "fieldType": "number",
+              "defaultValue": "50"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        -960,
+        -128
+      ],
+      "id": "78cfdd72-a26a-4e02-a34d-aec85cfe2d2e",
+      "name": "On form submission",
+      "webhookId": "1c007a6f-846b-4ef0-90c8-6dbc9176f410"
+    },
+    {
+      "parameters": {
+        "url": "http://model-faciliator:7002/get_spec_options",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text",
+              "outputPropertyName": "model_spec_options"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -64,
+        -256
+      ],
+      "id": "56e5cf4f-5133-4a46-950e-443b9bf84e7c",
+      "name": "Get model_spec"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.ctx.sessionID }}-orchestrator",
+        "contextWindowLength": 15
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        1968,
+        80
+      ],
+      "id": "57e74e2a-3c91-42ae-ac39-0d7033cac362",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "EToifuel9TOlc6yo",
+          "name": "n8n_user"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Database Calls",
+        "height": 224,
+        "width": 440
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2704,
+        288
+      ],
+      "typeVersion": 1,
+      "id": "467274d0-7512-475f-b7f8-4cc4a410072d",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Tool to validate a ARCHITECTURE_SPEC model",
+        "method": "POST",
+        "url": "http://model-faciliator:7002/validate",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "spec",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', `nn_taxonomy model in JSON from DB as JSON object (not escaped), do not include other fields e.g. name in the request only the architecture`, 'string') }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        2592,
+        176
+      ],
+      "id": "06b0fc3b-99b2-4b08-a2e5-fd6aa167f901",
+      "name": "model-architecture-validator"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Get information about a model by model id.",
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "models",
+          "mode": "list",
+          "cachedResultName": "models"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "id",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('values0_Value', `Unique model ID`, 'string') }}"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "name",
+            "status",
+            "nn_taxonomy",
+            "extra_meta"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        2768,
+        352
+      ],
+      "id": "10c0df03-876b-48db-b497-596198ac96ca",
+      "name": "get-model-data",
+      "credentials": {
+        "postgres": {
+          "id": "MTKdQt9xBfmirQQt",
+          "name": "model_db"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "gpt-5.3-chat",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        1776,
+        80
+      ],
+      "id": "b4fd072e-cdc2-494f-98e3-5acd8c951faf",
+      "name": "Azure gpt-5.3-chat",
+      "credentials": {
+        "azureOpenAiApi": {
+          "id": "vuyHHFR79qfaFdDD",
+          "name": "Azure Open AI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8f630a34-1ea1-433c-adfd-e4627499b27e",
+              "name": "batch_size",
+              "value": "={{ JSON.parse($json.input_shape)[0] }}",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -512,
+        -128
+      ],
+      "id": "59ff924e-f83f-4a22-8585-d4996cecf49f",
+      "name": "Set_Inputs"
+    },
+    {
+      "parameters": {
+        "value": "={{ $json.submittedAt }}-{{ $json.input_shape}}-{{ $json.output_nodes }}",
+        "dataPropertyName": "sessionID"
+      },
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 2,
+      "position": [
+        -736,
+        -128
+      ],
+      "id": "1b33d6f8-f35a-440b-b443-7cab7c4ad60c",
+      "name": "Set_ID"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"required\": [\"model_ID\", \"model_test_accuracy\"],\n  \"properties\": {\n    \"model_ID\": {\n      \"type\": \"string\",\n      \"description\": \"The final validated model ID (after real benchmark confirmation).\"\n    },\n    \"model_test_accuracy\": {\n      \"oneOf\": [\n        {\n          \"type\": \"number\",\n          \"description\": \"The test accuracy of the final validated model.\"\n        },\n        {\n          \"type\": \"null\",\n          \"description\": \"Use null when no valid accuracy is present so the plateau-detector skips the observation.\"\n        }\n      ]\n    },\n    \"summary\": {\n      \"type\": \"string\",\n      \"description\": \"Short summary of the model.\"\n    }\n  },\n  \"additionalProperties\": false\n}\n\n",
+        "autoFix": true,
+        "customizeRetryPrompt": true,
+        "prompt": "Instructions:\n--------------\n{instructions}\n--------------\nCompletion:\n--------------\n{completion}\n--------------\nError:\n--------------\n{error}\n--------------\n\nReturn only one JSON object that is safe for the downstream plateau-detector.\n\nRules:\n- Do not invent, guess, or repair missing values.\n- Preserve any valid model_test_accuracy exactly as given. Never alter, round, normalize, or substitute it.\n- If the Completion does not contain a valid model result, output an empty-safe object instead of fabricating data.\n- For missing model_ID, use an empty string.\n- For missing model_test_accuracy, use null so the workflow will skip the observation.\n- For missing summary, use an empty string.\n- Never use 0, 0.0, NaN, \"unknown\", or any other placeholder for model_test_accuracy.\n- Ignore any extra commentary, refusal text, or malformed fragments in the Completion.\n\nThe instructions contains the parser's format instructions. Follow those instructions exactly.\n\nIf the Completion contains a valid result, preserve only the valid values and do not invent any missing fields."
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        3248,
+        192
+      ],
+      "id": "336bb749-60ce-4ac5-b6eb-3880e4250296",
+      "name": "Structured Output Parser",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "cOtne5iZCpOkDp6E",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/cOtne5iZCpOkDp6E",
+          "cachedResultName": "create-model-generator-mesh"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "sessionID": "={{ $('Set_Inputs').item.json.sessionID }}",
+            "input_shape": "={{ $('Set_Inputs').item.json.input_shape }}",
+            "output_activation": "={{ $('Set_Inputs').item.json.output_activation }}",
+            "output_nodes": "={{ $('Set_Inputs').item.json.output_nodes }}",
+            "model_spec_options": "={{ $('Get model_spec').item.json.model_spec_options }}",
+            "blank_model": "={{ $('Generate init model').item.json.blank_model }}",
+            "model_spec_compact": "={{ $('Get compact model_spec').item.json.model_spec_compact }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "sessionID",
+              "displayName": "sessionID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "input_shape",
+              "displayName": "input_shape",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "output_activation",
+              "displayName": "output_activation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "output_nodes",
+              "displayName": "output_nodes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "model_spec_options",
+              "displayName": "model_spec_options",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "model_spec_compact",
+              "displayName": "model_spec_compact",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "blank_model",
+              "displayName": "blank_model",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        832,
+        -256
+      ],
+      "id": "d65b148c-cd47-4f69-b092-aa913e17578d",
+      "name": "Call 'create-model-generator-mesh'"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{$json.message}}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are a Neural Architecture Search (NAS) Orchestrator agent.\n\n## 1. Role & Mission\n\n- Control an agent mesh to find the strongest neural network architecture for the given task.\n- Operate as an evidence-driven controller over multiple tool calls and episodes.\n- Maximize final benchmark testaccuracy under cost and tool-call constraints.\n\n## 2. Output Contract\n\n- Every output MUST be exactly one of:\n  1. A tool call to one of the available agents; OR\n  2. One final JSON object with this exact shape:\n     - model_ID: string  (final validated model ID after real benchmark confirmation)\n     - model_test_accuracy: number  (test accuracy of the final validated model)\n     - summary: string  (short evidence-based rationale for selection)\n- Never emit an empty response.\n- If you are not making a tool call, the response MUST be a single valid JSON object that matches the schema exactly.\n- Never output any other natural language text:\n  - No explanations, no analysis, no comments, no partial JSON.\n- Never output model_ID alone. Final output must always include model_test_accuracy.\n\n## 3. Global Invariants\n\n### 3.1 Source of Truth\n\n- Architecture specs and metrics ONLY come from:\n  - model-generator-mesh outputs\n  - D1 get-model-data\n  - D2 get-model-performance\n- Never invent, guess, or fabricate:\n  - model IDs\n  - benchmark IDs\n  - metrics or zero-cost scores\n- If any ID or metric is not present in D1/D2, it is unknown and MUST be retrieved via the appropriate tool before use.\n- Raw tool output text is NOT evidence unless persisted in D1/D2. Always query D1/D2 and treat those records as canonical.\n\n### 3.2 Output Modality\n\n- During search, you must output only tool calls.\n- At the end, you must output exactly one final JSON object as defined above.\n- If a non-tool response is produced at any time, it must be valid JSON in the final schema; never produce blank, partial, or free-form text.\n- You are FORBIDDEN from outputting any explanatory, descriptive, or diagnostic natural language at any time.\n\n### 3.3 Zero-Cost Metrics\n\n- Zero-cost metrics (GN, SN, GR, FI, JC, PL, SF, SFB) are comparative ranking signals ONLY.\n- Use them to rank candidates within a run, not as direct estimates of final testaccuracy.\n- Once the mandatory training gate is satisfied, zero-cost metrics cannot be used to delay all training indefinitely.\n\n## 4. Available Tools (Summary)\n\n- A1. model-generator-mesh\n  - mode=generate\n    - Creates ONE new candidate model from task constraints and guidance.\n    - Input: chatInput (includes task, constraints, and hypothesis).\n  - mode=refine\n    - Refines ONE existing candidate using a targeted hypothesis.\n    - Input: chatInput, model_ID, refinementcandidate.\n  - One candidate per call.\n\n- A2. model-evaluator\n  - mode=zero-cost\n    - Returns proxy signals GN, SN, GR, FI, JC, PL, SF, SFB.\n  - mode=training\n    - Runs real training and returns benchmark evidence, including model_benchmark_ID and trainer metrics/comments.\n\n- T1. model-architecture-validator\n  - Validates a model JSON architecture spec against ARCHITECTURESPEC.\n  - Input MUST be the exact spec returned by D1, verbatim.\n  - Never send inferred or placeholder content.\n\n- D1. get-model-data\n  - Fetches architecture spec by model_ID.\n\n- D2. get-model-performance\n  - Fetches evaluator/trainer metrics and comments by model_ID or benchmark_ID.\n\n- M1. retrieve_state\n  - Retrieve persisted search state at run start and before any phase transition summary.\n\n- M2. log_state\n  - Persist state on every phase change and at episode start/end.\n  - You provide summarytext and summarystate; sessionid is injected automatically.\n\n- M3. get_episodes\n  - Optional. Use when retrieve_state and current context are insufficient for a transition summary.\n  - Recommended: created_at desc, limit 30.\n\n## 5. Internal State (Mental Model)\n\nTrack these variables internally as you act (DO NOT output them):\n\n- phase ∈ {exploration, targeted_refinement, plateau_check, real_validation, finalization, completed}\n- episode_index\n- generator_calls (per episode)\n- evaluator_calls (per episode)\n- episode_has_training_call ∈ {true,false}  (whether mode=training was used in this episode)\n- candidates_seen: list of {model_ID, zero_cost_metrics, D2_records}\n- best_model_id (current top candidate by D2 trainer-backed testaccuracy, if any)\n- best_zero_cost_snapshot (latest zero-cost metrics for best_model_id)\n- best_trained_model_id (best candidate with real training evidence, if any)\n- best_test_accuracy (highest D2 trainer testaccuracy observed so far)\n- last_benchmark_id (most recent benchmark_ID from training or zero-cost evaluation)\n- training_gate_satisfied ∈ {true,false}\n- coverage_reached ∈ {true,false}  (sufficient variety and attempts for current hypothesis)\n- plateau_confirmed ∈ {true,false}\n- current_hypothesis (internal description of architectural strategy)\n\nUse this mental state to inform all decisions and tool calls.\n\n## 6. Phases & Allowed Transitions\n\nPhases:\n\n1. exploration\n2. targeted_refinement\n3. plateau_check\n4. real_validation\n5. finalization\n6. completed\n\nOn every phase transition:\n\n- Use retrieve_state (if needed) and D2 evidence to update internal state.\n- Reflect on past operations and update current_hypothesis and strategy.\n- Immediately call log_state with:\n  - summarytext: short, decision-focused summary including:\n    - recent evidence and key D2 observations\n    - what has been tried so far\n    - your current or updated architectural hypothesis\n    - the strategy for the next iterations\n  - summarystate: include at least\n    - sessionstatus (current phase)\n    - currentphase\n    - previousphase\n    - transitionreason\n    - candidatesevaluatedcount\n    - refinementcycles\n    - best_model_ID (if any candidate evaluated)\n    - bestzerocostsnapshot\n    - best_trainedmodel_ID (if any)\n    - best_test_accuracy\n    - last_benchmark_ID\n    - nextaction (planned next step and hypothesis)\n    - generatorcalls\n    - evaluatorcalls\n- Ensure best_model_ID and best_test_accuracy are present and current in every log_state call during active search.\n\nPhase transitions:\n\n- exploration → targeted_refinement\n  - Condition: ~2 to 5 candidates generated and evaluated; promising candidates identified via zero-cost metrics and D2 comments.\n- targeted_refinement → plateau_check\n  - Condition: At least one refinement cycle completed and incremental GN/SN/GR gains are small AND no obvious low-cost fix remains for top candidates.\n- plateau_check → real_validation\n  - Condition: Mandatory training gate satisfied AND a balanced, low-risk candidate exists.\n- real_validation → finalization\n  - Condition: Finalization checklist satisfied (see Section 11).\n- Any phase → exploration\n  - Condition: Current architecture hypothesis is exhausted or all candidates fail promotion criteria; change hypothesis and restart exploration.\n\n## 7. Search Algorithm (Per Phase)\n\n### 7.1 Phase: exploration\n\nGoal: Build an initial pool of ~2 to 5 candidates and rank them using zero-cost metrics and D2 comments.\n\nLoop in this phase while:\n\n- training_gate_satisfied = false\n- generator_calls < 5 and evaluator_calls < 5 in the current episode.\n\nFor each candidate:\n\n1. Call model-generator-mesh with mode=generate to create ONE candidate consistent with INPUTSHAPE, ACTIVATIONFUNCTION, OUTPUTNODES and current_hypothesis.\n2. Call model-evaluator with mode=zero-cost for that model_ID.\n3. Call D2 get-model-performance by model_ID to fetch zero-cost metrics and comments.\n4. Update candidates_seen, best_zero_cost_snapshot, best_model_id (by zero-cost ranking and comments).\n5. Increment generator_calls and evaluator_calls.\n\nTransition to targeted_refinement when:\n\n- At least 2 candidates with D2 evaluator records exist, preferably 2–5.\n- You have identified one or more promising candidates and at least one hypothesis for improvement.\n\nIf per-episode caps are reached before sufficient coverage:\n\n- End the episode following Section 9 rules (including probe training if needed), then start a new episode with a revised current_hypothesis based on D2 patterns and get_episodes if needed.\n\n### 7.2 Phase: targeted_refinement\n\nGoal: Apply hypothesis-driven edits to promising candidates, generating 1 to 3 refined variants per hypothesis.\n\nLoop while:\n\n- generator_calls < 5 and evaluator_calls < 5 in the current episode.\n\nFor each refinement:\n\n1. Choose ONE promising candidate from candidates_seen based on D2 metrics and comments.\n2. Formulate ONE specific refinement hypothesis (internally) addressing observed weaknesses.\n3. Call model-generator-mesh with mode=refine for that model_ID, providing refinementcandidate and hypothesis.\n4. Call model-evaluator with mode=zero-cost for the refined model_ID.\n5. Call D2 get-model-performance by model_ID to obtain updated zero-cost metrics and comments.\n6. Update candidates_seen, best_zero_cost_snapshot, best_model_id.\n7. Increment generator_calls and evaluator_calls.\n\nStop refinements once 1 to 3 refined variants have been produced for the current hypothesis, or caps are reached.\n\nThen:\n\n- Move to plateau_check when:\n  - Refinement variants show limited additional GN/SN/GR improvements AND\n  - No obvious low-cost architectural fix remains for top candidates.\n\n### 7.3 Phase: plateau_check\n\nGoal: Decide whether to promote a candidate to real validation or to change hypothesis and return to exploration.\n\nPlateau is confirmed when:\n\n- All recent refinements show no meaningful improvement in GN/SN/GR.\n- The top candidate has no critical failures in FI, JC, PL, SF, or SFB.\n- coverage_reached = true for the current hypothesis.\n\nBehavior:\n\n- If plateau confirmed AND mandatory training gate is satisfied (Section 8), transition to real_validation.\n- If all candidates show critical failures or high risk, this is NOT a plateau:\n  - Change current_hypothesis based on D2 failure patterns.\n  - Log the new strategy via log_state (summarytext and nextaction).\n  - Return to exploration.\n\n### 7.4 Phase: real_validation\n\nGoal: Obtain real benchmark evidence via training runs and identify the best performer.\n\nRules:\n\n- You may call model-evaluator with mode=training in two ways:\n  1. **Probe training (one per episode at most):**\n     - Used to collect real benchmark evidence even if training_gate_satisfied = false.\n     - Always on the least-risk / most promising candidate.\n  2. **Promotion training (possibly multiple calls, under cost constraints):**\n     - Used for serious selection among candidates.\n     - Only when training_gate_satisfied = true.\n\n- After every model-evaluator mode=training call:\n  1. Call D2 get-model-performance by model_benchmark_ID.\n  2. Evaluate trainer evidence, focusing on:\n     - testaccuracy (maximize).\n     - train–test gap (> 0.08 indicates overfitting risk).\n     - trainer comments indicating instability or optimization failure.\n  3. Update best_trained_model_id and best_test_accuracy.\n  4. Compare new results to current best_test_accuracy and risk profile.\n\n- If trainer evidence is weak or risky:\n  - Produce ONE architecture-level refinement hypothesis based on D2 trainer comments.\n  - Use model-generator-mesh with mode=refine to generate 1 to 3 new variants.\n  - Evaluate with mode=zero-cost and, as needed, additional training runs under caps.\n\nContinue until either:\n\n- Finalization checklist is satisfied, OR\n- System- or budget-level tool limits are hit (then choose the least-risk best candidate and return final JSON according to Section 11).\n\n### 7.5 Phase: finalization\n\nGoal: Validate the final model architecture and emit the final JSON.\n\nSteps:\n\n1. Identify the candidate with:\n   - Real training evidence from D2.\n   - Highest testaccuracy among all trained candidates.\n   - Acceptable risk (train–test gap and trainer comments).\n2. Call D1 get-model-data by model_ID to fetch the architecture spec.\n3. Call model-architecture-validator with the exact D1-returned architecture spec verbatim.\n4. Ensure validation passes.\n5. Emit final JSON:\n   - model_ID: final validated model ID.\n   - model_test_accuracy: D2 trainer testaccuracy for this model.\n   - summary: short evidence-based rationale stating:\n     - total candidate count.\n     - whether refinement occurred.\n     - promotion rationale.\n     - key D2 trainer test results that justify selection.\n\n## 8. Mandatory Training Gate (Promotion Gate)\n\nUse model-evaluator mode=training for **promotion decisions** (beyond per-episode probe training) only when ALL are true:\n\n1. At least 3 distinct candidates have D2 evaluator records in the current run.\n2. At least one targeted refinement cycle occurred after the initial batch.\n3. Candidate ranking for promotion is based on comparative D2 records, not a single candidate impression.\n\nYou MAY still call model-evaluator mode=training ONCE per episode as a probe on the least-risk candidate at episode end, even if these conditions are not satisfied. Probe training is used to collect real benchmark evidence and refine hypotheses; promotion to final model remains gated by the conditions above.\n\n## 9. Per-Episode Caps & “No Episode Without Training”\n\n- Per episode hard caps:\n  - max 5 model-generator-mesh calls\n  - max 5 model-evaluator calls\n\n- At episode start:\n  - Call retrieve_state.\n  - If no state exists, initialize via log_state with sessionstatus=exploration and default state.\n  - Set episode_has_training_call = false.\n\n- During the episode:\n  - Whenever you call model-evaluator with mode=training, set episode_has_training_call = true.\n\n- Episode end (cap reached, explicit boundary, or phase change that closes the episode):\n  - If episode_has_training_call = false:\n    - Select the least-risk / most promising candidate based on D2 evaluator records\n      (balanced GN/SN/GR, no critical FI/JC/PL/SF/SFB failures, and best comments).\n    - Call model-evaluator with mode=training ONCE for that candidate, even if the mandatory training gate is not fully satisfied (this is a probe training).\n    - Update internal state and D2 records from the training result.\n  - Then call log_state with summarytext and summarystate (including generatorcalls, evaluatorcalls, best_model_ID, best_test_accuracy, episode_has_training_call, and nextaction).\n\nThis guarantees that **no episode ends without at least one training call.**\n\n## 10. Failure Recovery\n\nIf all candidates in the current evaluation window fail promotion criteria:\n\n1. You MUST NOT output any explanatory text, failure analysis, architectural suggestions, or metric descriptions.\n2. Immediately change current_hypothesis based on D2 failure patterns:\n   - SFSFB ≈ 0 (blocked gradient flow):\n     - Generate with dense connectivity (DenseNet-style) or strict identity shortcuts (ResNet-v2).\n   - GR ≈ 0 (optimization fragility):\n     - Generate with stronger normalization (BatchNorm, LayerNorm) or more residual connections.\n   - JC very negative (representation collapse risk):\n     - Generate with additional regularization, skip connections, or auxiliary losses.\n   - FI very low (saturated feature information):\n     - Generate with ReLU variants, normalized initialization, or reduced depth.\n   - PL low (poor layer separability):\n     - Generate with skip connections or depth-wise separable convolutions.\n3. Call model-generator-mesh with mode=generate to create new candidates under per-episode caps using the updated hypothesis.\n4. Interleave with model-evaluator mode=zero-cost and D2 checks under per-episode caps.\n5. Use log_state to record the new hypothesis and strategy in summarytext and nextaction.\n\nIf system- or budget-level tool limits are reached before promotion:\n\n- Return the best comparative candidate with a final JSON summary describing incomplete search, using the same finalization format.\n\n## 11. Promotion Rules & Finalization Checklist\n\nPromotion rules:\n\n- Prefer candidates with balanced GN, SN, and GR and no critical failures in FI, JC, PL, SF, or SFB.\n- If two candidates are close, prefer:\n  - Lower structural risk.\n  - Stronger evaluator comments from D2.\n- If only one model has real training evidence and plateau is not clearly established, continue exploration/refinement instead of finalizing.\n- After training, always compare new D2 trainer result against current best before deciding.\n\nFinalization checklist (all must be true):\n\n1. Real benchmark evidence exists for the selected model (D2 trainer records).\n2. Selected model has the highest testaccuracy among all trained candidates.\n3. D2 trainer testaccuracy:\n   - Default target: ≥ 0.95 for normal finalization.\n   - Hard minimum floor: ≥ 0.85, used only if explicit task constraints or system limits force finalization below the default target.\n4. D1 architecture spec has been fetched and passed verbatim to model-architecture-validator.\n5. Architecture passes validation.\n6. Final and Episode JSON contains exactly one model with:\n   - model_ID\n   - model_test_accuracy\n   - summary (describing):\n     - candidate count\n     - whether refinement occurred\n     - promotion rationale\n     - concrete D2 trainer-result evidence.\n\n## 12. Internal Reasoning Loop (Do Not Output)\n\nBefore EVERY tool call:\n\n1. Read current retrieve_state (if needed), recent D2 records, and internal state.\n2. Reflect on past operations in the current and previous episodes (including get_episodes if used).\n3. Decide:\n   - Current phase and episode.\n   - Whether training_gate_satisfied, coverage_reached, and plateau_confirmed are true.\n   - Whether current_hypothesis should change.\n4. Formulate ONE concise internal hypothesis:\n   - “What change or evidence do I need next, and why?”\n5. Select exactly ONE tool call that best tests that hypothesis, respecting per-episode caps and the rules for probe vs promotion training.\n\nAfter EVERY tool call:\n\n1. Update internal state (including candidates_seen, best_model_id, best_test_accuracy, last_benchmark_id, generator_calls, evaluator_calls, episode_has_training_call).\n2. Re-evaluate:\n   - Whether phase should change.\n   - Whether episode caps are reached.\n   - Whether failure recovery rules apply.\n3. When a phase or episode boundary is reached:\n   - If episode_has_training_call = false, execute the end-of-episode probe training as defined in Section 9.\n   - Summarize past operations and strategy for next iterations in summarytext.\n   - Log this via log_state (summarytext and summarystate.nextaction).\n\nNever expose this reasoning in your output. Only tool calls and the final/episode JSON are allowed.\n\nFinal and episode output JSON Schema:\n{\n  \"type\": \"object\",\n  \"required\": [\"model_ID\", \"model_test_accuracy\"],\n  \"properties\": {\n    \"model_ID\": {\n      \"type\": \"string\",\n      \"description\": \"The final validated model ID (after real benchmark confirmation).\"\n    },\n    \"model_test_accuracy\": {\n      \"oneOf\": [\n        {\n          \"type\": \"number\",\n          \"description\": \"The test accuracy of the final validated model.\"\n        },\n        {\n          \"type\": \"null\",\n          \"description\": \"Use null when no valid accuracy is present from training is present\"\n        }\n      ]\n    },\n    \"summary\": {\n      \"type\": \"string\",\n      \"description\": \"Short summary of the episode.\"\n    }\n  },\n  \"additionalProperties\": false\n}\n- Any assistant response that is not a tool call MUST be a single JSON object conforming exactly to this schema.\n",
+          "maxIterations": "={{ $json.ctx.max_iterations }}",
+          "returnIntermediateSteps": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2368,
+        -144
+      ],
+      "id": "90c062cd-f4ad-4760-8cdb-17114f91fb9b",
+      "name": "Orchestrator Agent",
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Get information about model performance by model_id",
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "model_benchmarks",
+          "mode": "list",
+          "cachedResultName": "model_benchmarks"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "model_id",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('values0_Value', `model_id`, 'string') }}"
+            }
+          ]
+        },
+        "combineConditions": "OR",
+        "sort": {
+          "values": []
+        },
+        "options": {
+          "outputColumns": [
+            "benchmark_name",
+            "metrics",
+            "model_remarks"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        2896,
+        352
+      ],
+      "id": "aaa0b325-1205-4575-a780-322cb9616381",
+      "name": "get-model-performance (by model_id)",
+      "credentials": {
+        "postgres": {
+          "id": "MTKdQt9xBfmirQQt",
+          "name": "model_db"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Get information about model performance by model_benchmark_id",
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "model_benchmarks",
+          "mode": "list",
+          "cachedResultName": "model_benchmarks"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "id",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('values1_Value', `or model_benchmark_id`, 'string') }}"
+            }
+          ]
+        },
+        "combineConditions": "OR",
+        "sort": {
+          "values": []
+        },
+        "options": {
+          "outputColumns": [
+            "benchmark_name",
+            "metrics",
+            "model_remarks"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        3008,
+        352
+      ],
+      "id": "712edd99-cdd5-4e07-a19f-89f22bda435c",
+      "name": "get-model-performance (by model_benchmark_id)",
+      "credentials": {
+        "postgres": {
+          "id": "MTKdQt9xBfmirQQt",
+          "name": "model_db"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1e64d815-cd2d-4d70-9c77-2554505179b8",
+              "name": "message",
+              "value": "=TASK\n- Find the best-performing neural network architecture for this task using a cost-aware NAS process that:\n  - Starts with a small candidate batch.\n  - Iteratively refines only the most promising architectures.\n  - Obeys all NAS process rules defined in the system message.\n\nTASK INPUTS\n- INPUT_SHAPE: {{ $json.ctx.input_shape }}\n- ACTIVATION_FUNCTION: {{ $json.ctx.output_activation }}\n- OUTPUT_NODES: {{ $json.ctx.output_nodes }}\n\nEXECUTION REQUIREMENTS\n\n- Phases:\n  - Follow the NAS operating approach:\n    - exploration → targeted_refinement → plateau_check → real_validation → finalization.\n  - You may jump back to exploration with a new hypothesis when needed, as defined in the system message.\n\n- Initial candidate batch:\n  - In the initial generation step, build 2 to 5 candidates total via repeated model-generator-mesh calls (mode=generate, one model per call).\n  - After each generator call:\n    - Immediately call model-evaluator with mode=zero-cost for the new model_ID.\n    - Then call D2 get-model-performance by model_ID and use DB results as the source of truth.\n\n- Follow-up variants:\n  - If the initial pool is insufficient, return to model-generator-mesh with ONE concrete refinement hypothesis.\n  - Generate 1 to 3 follow-up variants total using separate mode=refine calls (one model per call).\n  - After each variant:\n    - Run model-evaluator mode=zero-cost.\n    - Query D2 get-model-performance by model_ID and update ranking.\n\n- Zero-cost metrics:\n  - Use zero-cost metrics (GN, SN, GR, FI, JC, PL, SF, SFB) for exploration speed.\n  - Treat them as comparative ranking signals only, not direct final performance estimates.\n  - Use D2 evaluator comments/metrics to drive the next model-generator-mesh refinement hypothesis.\n\n- ID and metric handling:\n  - Never invent, guess, or fabricate model IDs, benchmark IDs, or metrics.\n  - Use only values returned by model-generator-mesh and D1/D2.\n  - Do not treat raw tool output text as evidence unless it is persisted in D1/D2.\n  - If an ID or metric is not present in D1/D2, it is unknown and must be retrieved via get-model-data / get-model-performance before use.\n\n- Mandatory training gate (promotion gate):\n  - Use model-evaluator mode=training for PROMOTION decisions only when ALL are true:\n    1. At least 3 distinct candidates have D2 evaluator records.\n    2. At least one targeted refinement cycle occurred after the initial batch.\n    3. Candidate ranking for promotion is based on comparative D2 records, not a single candidate impression.\n\n- Per-episode probe training (“no episode without training”):\n  - In every episode, if the episode is about to end (cap reached or explicit boundary) and no model-evaluator mode=training call has occurred yet:\n    - Select the least-risk / most promising candidate based on D2 evaluator records (balanced GN/SN/GR, no critical FI/JC/PL/SF/SFB failures, and best comments).\n    - Call model-evaluator with mode=training ONCE for that candidate as a probe, even if the mandatory training gate is not fully satisfied.\n    - Then log state and close the episode.\n  - Once the mandatory training gate is satisfied, additional training calls may be used within episodes as promotion training, subject to global cost constraints.\n\n- Trainer evaluation:\n  - After every model-evaluator mode=training call:\n    - Call D2 get-model-performance by model_benchmark_ID.\n    - Evaluate trainer evidence:\n      - Maximize testaccuracy.\n      - Treat train–test gap > 0.08 as overfitting risk.\n      - If trainer comments indicate instability or optimization failure, require refinement instead of finalization.\n  - If trainer evidence is weak or risky:\n    - Produce ONE architecture-level refinement hypothesis from D2 trainer comments.\n    - Send it to model-generator-mesh with mode=refine for 1 to 3 new variants and continue.\n\n- Finalization target:\n  - Never finalize a weak model.\n  - Default target: best D2 trainer testaccuracy ≥ 0.95 for normal finalization.\n  - Hard minimum floor: 0.85 testaccuracy, used only if task constraints or system limits force finalization below 0.95.\n  - Never finalize without real benchmark evidence from D2 trainer records.\n\n- Validation before finalization:\n  - Before final validation:\n    - Fetch the selected model architecture via D1 get-model-data by model_ID.\n    - Validate using model-architecture-validator with the exact D1-returned architecture spec verbatim (no placeholders or inferred text).\n  - If D1 spec is unavailable or malformed:\n    - Fix retrieval first and continue the loop; do not finalize.\n\n- Per-episode caps:\n  - At most 5 model-generator-mesh calls per episode.\n  - At most 5 model-evaluator calls per episode.\n  - If a cap is reached:\n    - Enforce the “no episode without training” rule above if no training has been run yet.\n    - Then stop further generator/evaluator calls in that episode.\n    - Call log_state to record the situation and your strategy.\n    - Continue in a new episode with a revised hypothesis.\n\nMEMORY & STATE REQUIREMENTS\n\n- At run start:\n  - Call retrieve_state.\n  - If no state exists, initialize with log_state and sessionstatus=exploration.\n\n- On each phase change:\n  - Optionally call get_episodes (created_at desc, limit 30) when additional detail is needed.\n  - Call log_state immediately with:\n    - summarytext: decision-focused summary of recent evidence and a concise strategy for the next iterations.\n    - summarystate: include sessionstatus, currentphase, previousphase, transitionreason, candidatesevaluatedcount, refinementcycles, bestmodel_ID, bestzerocostsnapshot, besttrainedmodel_ID, besttestaccuracy, lastbenchmark_ID, nextaction, generatorcalls, evaluatorcalls.\n\n- During active search:\n  - Ensure bestmodel_ID and besttestaccuracy are present and current in every log_state call.\n\nSELECTION RULES\n\n- Prefer candidates with balanced GN, SN, and GR.\n- Reject candidates with critical failures in FI, JC, PL, SF, or SFB unless a low-cost targeted fix is clear.\n- If two candidates are close, prefer:\n  - Lower structural risk.\n  - Stronger evaluator comments from D2.\n- If only one model has real training evidence and plateau is not clearly established, continue exploration/refinement instead of finalizing.\n- If a newly trained candidate does NOT beat the current best D2 trainer-backed testaccuracy with acceptable risk:\n  - Continue refinement/generation instead of finalizing.\n- Do not return non-final, partial, or refusal text. Keep searching until:\n  - Final JSON output is produced, OR\n  - Explicit system/tool limits force an incomplete-search final JSON.\n\nOUTPUT FORMAT\n\n- Follow the system message:\n  - Output only tool calls and one final JSON object.\n  - Final JSON MUST match:\n    - model_ID: string\n    - model_test_accuracy: number\n    - summary: string.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1504,
+        -144
+      ],
+      "id": "18a73180-79ac-4526-8906-ee0ec2f1e87d",
+      "name": "Set user message"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.plateau }}",
+                    "rightValue": 0.9,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "id": "3f720c65-a4e4-473d-a12f-d8419d54d829"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "a3bc475d-104c-45dd-bda0-be411fa8d0e9",
+                    "leftValue": "={{ $json.plateau }}",
+                    "rightValue": 0.9,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "false",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "e9500e51-1978-40c7-9008-fcc3a98efee7",
+                    "leftValue": "={{ $json.plateau }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "object",
+                      "operation": "notExists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        3728,
+        -160
+      ],
+      "id": "2bf096ee-1414-4015-8627-c9d6932abac5",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f1c7f436-8a05-4f50-aa0d-1775cc20fca2",
+              "name": "ctx",
+              "value": "={\n  \"sessionID\": \"{{ $json.sessionID }}\",\n  \"input_shape\": \"{{ $json.input_shape }}\",\n  \"output_activation\": \"{{ $json.output_activation }}\",\n  \"output_nodes\": \"{{ $json.output_nodes }}\",\n  \"dataset\": \"{{ $json.dataset }}\",\n  \"batch_size\": {{ $json.batch_size }},\n  \"max_iterations\": {{ $json['Max. Iterations']}}\n}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -288,
+        -128
+      ],
+      "id": "873e4b00-d2c0-4b75-9c6a-a4364170680d",
+      "name": "Set_ctx"
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "useDataOfInput": 2
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1280,
+        -144
+      ],
+      "id": "a17b728d-6de3-485c-a557-8dc6bd033319",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "content": "## Session initiation",
+        "height": 352,
+        "width": 2160,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -752,
+        -304
+      ],
+      "typeVersion": 1,
+      "id": "5b641516-1f13-4375-9ae5-10b963f01d23",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "url": "http://model-faciliator:7002/get_spec_options_compact",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text",
+              "outputPropertyName": "model_spec_compact"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        160,
+        -256
+      ],
+      "id": "e245b187-ba94-4335-8cae-fad60ee75f9f",
+      "name": "Get compact model_spec"
+    },
+    {
+      "parameters": {
+        "model": "gpt-5-mini",
+        "options": {
+          "maxRetries": 3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        -960,
+        304
+      ],
+      "id": "8029f57b-f66d-434d-96b2-bd8e78d7e86a",
+      "name": "Azure gpt-5-mini",
+      "credentials": {
+        "azureOpenAiApi": {
+          "id": "vuyHHFR79qfaFdDD",
+          "name": "Azure Open AI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## agent-memory",
+        "height": 224,
+        "width": 416,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1904,
+        288
+      ],
+      "typeVersion": 1,
+      "id": "42972e94-5726-4d78-aea2-c8e6afbe271f",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Tool to write the current session state",
+        "method": "POST",
+        "url": "http://agent-memory:7011/state",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "session_id",
+              "value": "={{ $json.ctx.sessionID }}"
+            },
+            {
+              "name": "summary_text",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters1_Value', `Summary of current state`, 'string') }}"
+            },
+            {
+              "name": "summary_state",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters2_Value', `Current state`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        1952,
+        352
+      ],
+      "id": "24b8a0b4-f784-43eb-9c58-61144f85644b",
+      "name": "log_state"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Tool to retrieve the current session state",
+        "url": "=http://agent-memory:7011/state?session_id={{ $json.ctx.sessionID }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        2080,
+        352
+      ],
+      "id": "29f7a691-82a8-45f0-9307-89ac0d3e680d",
+      "name": "retrieve_state"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Retrieves recent session episodes",
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "agent_session_episodes",
+          "mode": "list",
+          "cachedResultName": "agent_session_episodes"
+        },
+        "limit": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Limit', `Limit of eposodes (default is 10)`, 'number') }}",
+        "where": {
+          "values": [
+            {
+              "column": "session_id",
+              "value": "={{ $json.ctx.sessionID }}"
+            }
+          ]
+        },
+        "combineConditions": "OR",
+        "sort": {
+          "values": [
+            {
+              "column": "created_at",
+              "direction": "DESC"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "step_index",
+            "agent",
+            "episode_metadata",
+            "message",
+            "created_at"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        2208,
+        352
+      ],
+      "id": "aff911a2-a14e-4dd6-908f-4d9ad9af6ed9",
+      "name": "get_episodes",
+      "credentials": {
+        "postgres": {
+          "id": "enZW6kTxNkRjzr7L",
+          "name": "agent_memory"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "DjV7KS6JqXl58KBe",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/DjV7KS6JqXl58KBe",
+          "cachedResultName": "create-model-evaluator-mesh"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "sessionID": "={{ $('Set_Inputs').item.json.sessionID }}"
+          },
+          "matchingColumns": [
+            "sessionID"
+          ],
+          "schema": [
+            {
+              "id": "sessionID",
+              "displayName": "sessionID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1056,
+        -256
+      ],
+      "id": "eb9a48ef-3797-40db-9a80-18070ca3cd70",
+      "name": "Call 'create-model-evaluator-mesh'"
+    },
+    {
+      "parameters": {
+        "description": "Evaluates candidate models and returns zero-cost performance metrics: GN, SN, GR, FI, JC, PL, SF, SFB.",
+        "workflowId": {
+          "__rl": true,
+          "value": "eyBKjTuc2PiHMc5W",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/eyBKjTuc2PiHMc5W",
+          "cachedResultName": "model-evaluator-mesh"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "model_ID": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('model_ID', `Model ID (passed from model-generator)`, 'string') }}",
+            "input_shape": "={{ $json.ctx.input_shape }}",
+            "batch_size": "={{ $json.ctx.batch_size }}",
+            "sessionID": "={{ $json.ctx.sessionID }}",
+            "output_nodes": "={{ $json.ctx.output_nodes }}",
+            "dataset": "={{ $json.ctx.dataset }}",
+            "training_epochs": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('training_epochs', `epochs for training mode max 50`, 'string') }}",
+            "mode": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('mode', `Mode of operation: must be \"zero-cost\" or \"training\"`, 'string') }}",
+            "training_loss_function": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('training_loss_function', `loss_function name after \"torch.nn\" e.g. value \"CrossEntropyLoss\" for training mode`, 'string') }}",
+            "training_optimizer": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('training_optimizer', `optimizer name after \"torch.optim\" default value \"AdamW\" for training mode`, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "sessionID",
+              "displayName": "sessionID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "mode",
+              "displayName": "mode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "model_ID",
+              "displayName": "model_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "input_shape",
+              "displayName": "input_shape",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "dataset",
+              "displayName": "dataset",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "output_nodes",
+              "displayName": "output_nodes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "batch_size",
+              "displayName": "batch_size",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "training_loss_function",
+              "displayName": "training_loss_function",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "training_optimizer",
+              "displayName": "training_optimizer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "training_epochs",
+              "displayName": "training_epochs",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        2464,
+        176
+      ],
+      "id": "874fcd88-7f52-45fd-a9fc-7761145c91ca",
+      "name": "Call 'model-evaluator'"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1e64d815-cd2d-4d70-9c77-2554505179b8",
+              "name": "message",
+              "value": "=CONTEXT\n- The previous batch of candidates did not meet promotion criteria, and a clear plateau or finalization condition has NOT been confirmed.\n\nREQUIRED BEHAVIOR\n\n1. Retrieve and reflect on state:\n   - Call retrieve_state to load the latest search state.\n   - Optionally call get_episodes (created_at desc, limit 30) if additional historical context is needed.\n   - Internally review:\n     - Past candidates and D2 metrics (zero-cost and training).\n     - Previous hypotheses and strategies.\n     - Current phase, generator_calls, evaluator_calls, bestmodel_ID, besttestaccuracy, episode_has_training_call.\n\n2. Decide based on the mandatory training gate:\n   - If training_gate_satisfied = true:\n     - Do NOT keep looping on zero-cost only.\n     - Select the least-risk / most promising candidate for promotion (balanced GN/SN/GR, no critical FI/JC/PL/SF/SFB failures, strong D2 comments).\n     - Call model-evaluator with mode=training for that candidate (promotion training).\n   - If training_gate_satisfied = false:\n     - Ensure the “no episode without training” rule:\n       - If this episode is about to end (caps reached or explicit boundary) and episode_has_training_call = false:\n         - Select the least-risk / most promising candidate based on D2.\n         - Call model-evaluator with mode=training ONCE as a probe.\n     - Otherwise:\n       - Immediately generate new candidates:\n         - Update your internal architectural hypothesis using failure patterns from D2 and any plateau-detector or summary inputs.\n         - Call model-generator-mesh with mode=generate using this explicit hypothesis targeting the identified weaknesses.\n       - For each new candidate:\n         - Call model-evaluator with mode=zero-cost.\n         - Call D2 get-model-performance by model_ID and update ranking.\n\n3. Strategic logging and episode closure:\n   - When you update your strategy or close an episode:\n     - Call log_state with:\n       - summarytext: brief summary of:\n         - What has been tried so far.\n         - What failed or underperformed.\n         - Your new architectural hypothesis or next strategy.\n       - summarystate: include updated sessionstatus, currentphase, previousphase, transitionreason, candidatesevaluatedcount, refinementcycles, bestmodel_ID, bestzerocostsnapshot, besttrainedmodel_ID, besttestaccuracy, lastbenchmark_ID, nextaction, generatorcalls, evaluatorcalls.\n   - Then continue with the next appropriate generator/evaluator/validator call as dictated by the system prompt.\n\nCONSTRAINTS\n\n- Per-episode caps:\n  - No more than 5 model-generator-mesh calls and 5 model-evaluator calls per episode.\n  - If a cap is reached:\n    - If episode_has_training_call = false:\n      - Select the least-risk / most promising candidate based on D2.\n      - Call model-evaluator with mode=training ONCE as a probe for that candidate.\n      - Update state from D2.\n    - Call log_state to close the episode and record your strategy for the next episode.\n    - Start a new episode with a revised hypothesis and nextaction.\n\n- Training gate semantics:\n  - Probe training:\n    - Allowed once per episode at end, even if training_gate_satisfied = false.\n  - Promotion training:\n    - Only when training_gate_satisfied = true, for serious selection among candidates.\n\n- Output modality:\n  - Output ONLY tool calls in this continuation step.\n  - No explanatory text, no analysis, no metric descriptions, no free-form language are allowed.\n\n- Source of truth:\n  - Never invent or guess model IDs, benchmark IDs, or metrics.\n  - Use only values returned by model-generator-mesh and D1/D2.\n  - If an ID or metric is not present in D1/D2, retrieve it before use.\n\n- Coverage and next actions:\n  - Continue the loop only until the coverage gate is satisfied for the current hypothesis.\n  - After coverage is satisfied, the next step must be:\n    - Promotion to training (if training_gate_satisfied), OR\n    - Hypothesis change and logged restart, not another open-ended zero-cost-only cycle.",
+              "type": "string"
+            },
+            {
+              "id": "b66fb0bd-4143-471a-9827-aed60d59513e",
+              "name": "ctx",
+              "value": "={   \n  \"sessionID\": \"{{ $('Set_ctx').first().json.ctx.sessionID }}\",   \n  \"input_shape\": \"{{ $('Set_ctx').first().json.ctx.input_shape }}\",   \n  \"output_activation\": \"{{ $('Set_ctx').first().json.ctx.output_activation }}\",   \n  \"output_nodes\": \"{{ $('Set_ctx').first().json.ctx.output_nodes }}\",   \n  \"dataset\": \"{{ $('Set_ctx').first().json.ctx.dataset }}\",   \n  \"batch_size\": {{ $('Set_ctx').first().json.ctx.batch_size }},   \n  \"max_iterations\": {{ $('Set_ctx').first().json.ctx.max_iterations}} \n}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3952,
+        -128
+      ],
+      "id": "1a679f94-363b-4d4c-83af-50206bb1192a",
+      "name": "Set continuation message"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d2904ac2-6e7b-4006-9de6-1728821e98f6",
+              "name": "output",
+              "value": "={{ $json.received_request.observations[0].output }}",
+              "type": "object"
+            },
+            {
+              "id": "adef24e7-3dc6-4fb2-ad0f-278dc885fce9",
+              "name": "ctx",
+              "value": "={      \"sessionID\": \"{{ $('Set_ctx').first().json.ctx.sessionID }}\",      \"input_shape\": \"{{ $('Set_ctx').first().json.ctx.input_shape }}\",      \"output_activation\": \"{{ $('Set_ctx').first().json.ctx.output_activation }}\",      \"output_nodes\": \"{{ $('Set_ctx').first().json.ctx.output_nodes }}\",      \"dataset\": \"{{ $('Set_ctx').first().json.ctx.dataset }}\",      \"batch_size\": {{ $('Set_ctx').first().json.ctx.batch_size }},      \"max_iterations\": {{ $('Set_ctx').first().json.ctx.max_iterations}}  }",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4160,
+        -304
+      ],
+      "id": "41e33e06-7b73-46e6-bd01-9543fbd36a64",
+      "name": "Final model output"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "CfScpscmUfbO2dTL",
+          "mode": "list",
+          "cachedResultName": "token-consumption",
+          "cachedResultUrl": "/projects/EqTnf87AG5HyB5dF/datatables/CfScpscmUfbO2dTL"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "sessionID",
+              "keyValue": "={{ $json.ctx.sessionID }}"
+            }
+          ]
+        },
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        4384,
+        -304
+      ],
+      "id": "94d2b702-4dbb-41be-bc21-58c0aca78e3a",
+      "name": "Get token consumption"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e66b085e-8696-465d-9cc7-360419f369ec",
+              "name": "output",
+              "value": "={{ $('Final model output').item.json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4608,
+        -304
+      ],
+      "id": "f393ceea-b93c-4f92-a9ab-6e238d4e2fb5",
+      "name": "Compose output"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://model-faciliator:7002/create_base_spec",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "input_shape",
+              "value": "={{ $('Set_Inputs').item.json.input_shape }}"
+            },
+            {
+              "name": "output_shape",
+              "value": "=[1, {{ $('Set_Inputs').item.json.output_nodes }}]"
+            },
+            {
+              "name": "output_activation",
+              "value": "={{ $('Set_Inputs').item.json.output_activation }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text",
+              "outputPropertyName": "blank_model"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        384,
+        -256
+      ],
+      "id": "22552ffc-d1d0-4f02-8742-94e440db1dfa",
+      "name": "Generate init model"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://plateau-detector:7005/update",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "session_id",
+              "value": "={{ $('Set_ctx').first().json.ctx.sessionID }}"
+            },
+            {
+              "name": "output",
+              "value": "={{ $json.output }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3504,
+        -144
+      ],
+      "id": "464f5f74-fd94-4c51-8875-670a5fd2de41",
+      "name": "plateau-detector"
+    },
+    {
+      "parameters": {
+        "model": "gpt-5.1",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        3248,
+        400
+      ],
+      "id": "5631b632-5478-43cd-a96e-23e15bbc246c",
+      "name": "Azure gpt-5.1",
+      "credentials": {
+        "azureOpenAiApi": {
+          "id": "vuyHHFR79qfaFdDD",
+          "name": "Azure Open AI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Generates candidate models based on inputs, output shape, and optional activation function. You can provide guidance to refine generated models. Outputs the model ID in the database",
+        "workflowId": {
+          "__rl": true,
+          "value": "jw40vsXPv50MEHL8",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/jw40vsXPv50MEHL8",
+          "cachedResultName": "model-generator-mesh-v2"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chatInput": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('chatInput', `Message to the model-generator mesh`, 'string') }}",
+            "sessionID": "={{ $json.ctx.sessionID }}",
+            "input_shape": "={{ $json.ctx.input_shape }}",
+            "output_activation": "={{ $json.ctx.output_activation }}",
+            "output_nodes": "={{ $json.ctx.output_nodes }}",
+            "mode": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('mode', `Mode of operation \"generate\" for new models and \"refine\" with provided model_ID to refine an existing model`, 'string') }}",
+            "model_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('model_id', `When using \"refine\" mode = model_ID; \"generate\" mode = \"\"`, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "chatInput",
+              "displayName": "chatInput",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "sessionID",
+              "displayName": "sessionID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "input_shape",
+              "displayName": "input_shape",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "output_activation",
+              "displayName": "output_activation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "output_nodes",
+              "displayName": "output_nodes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "mode",
+              "displayName": "mode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "model_id",
+              "displayName": "model_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        2352,
+        176
+      ],
+      "id": "65912e6a-6ec2-4f61-b6ba-803050c5fdeb",
+      "name": "Call 'model-generator-mesh'"
+    },
+    {
+      "parameters": {
+        "content": "## Plateu detector loop",
+        "height": 224,
+        "width": 640,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3472,
+        -208
+      ],
+      "id": "bd3bba65-879e-4d5f-81d9-2d512bf54437",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "CfScpscmUfbO2dTL",
+          "mode": "list",
+          "cachedResultName": "token-consumption",
+          "cachedResultUrl": "/projects/EqTnf87AG5HyB5dF/datatables/CfScpscmUfbO2dTL"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "sessionID",
+              "keyValue": "={{ $('Set_ctx').item.json.ctx.sessionID }}"
+            },
+            {
+              "keyName": "agent",
+              "keyValue": "model-evaluator-mesh"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "sessionID": "={{ $('Set_ctx').item.json.ctx.sessionID }}",
+            "agent": "model-evaluator-mesh"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "sessionID",
+              "displayName": "sessionID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "totalTokens",
+              "displayName": "totalTokens",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "promptTokens",
+              "displayName": "promptTokens",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "completionTokens",
+              "displayName": "completionTokens",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "agent",
+              "displayName": "agent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        688,
+        -256
+      ],
+      "id": "d8d1ed95-1a4e-4904-8d30-9cdafb026b2e",
+      "name": "Create total token row (eval)"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "CfScpscmUfbO2dTL",
+          "mode": "list",
+          "cachedResultName": "token-consumption",
+          "cachedResultUrl": "/projects/EqTnf87AG5HyB5dF/datatables/CfScpscmUfbO2dTL"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "sessionID",
+              "keyValue": "={{ $('Set_ctx').item.json.ctx.sessionID }}"
+            },
+            {
+              "keyName": "agent",
+              "keyValue": "model-generator-mesh"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "sessionID": "={{ $('Set_ctx').item.json.ctx.sessionID }}",
+            "agent": "model-generator-mesh"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "sessionID",
+              "displayName": "sessionID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "totalTokens",
+              "displayName": "totalTokens",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "promptTokens",
+              "displayName": "promptTokens",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "completionTokens",
+              "displayName": "completionTokens",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "agent",
+              "displayName": "agent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        544,
+        -256
+      ],
+      "id": "f6d55bdc-8401-4c68-8076-7efae5c990c1",
+      "name": "Create total token row (gen)"
+    }
+  ],
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Set_ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get model_spec": {
+      "main": [
+        [
+          {
+            "node": "Get compact model_spec",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "model-architecture-validator": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get-model-data": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Azure gpt-5.3-chat": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set_Inputs": {
+      "main": [
+        [
+          {
+            "node": "Set_ctx",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set_ID": {
+      "main": [
+        [
+          {
+            "node": "Set_Inputs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'create-model-generator-mesh'": {
+      "main": [
+        [
+          {
+            "node": "Call 'create-model-evaluator-mesh'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Orchestrator Agent": {
+      "main": [
+        [
+          {
+            "node": "plateau-detector",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get-model-performance (by model_id)": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get-model-performance (by model_benchmark_id)": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set user message": {
+      "main": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Final model output",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set continuation message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set continuation message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set_ctx": {
+      "main": [
+        [
+          {
+            "node": "Get model_spec",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Set user message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get compact model_spec": {
+      "main": [
+        [
+          {
+            "node": "Generate init model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Azure gpt-5-mini": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "log_state": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "retrieve_state": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_episodes": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'create-model-evaluator-mesh'": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'model-evaluator'": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set continuation message": {
+      "main": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final model output": {
+      "main": [
+        [
+          {
+            "node": "Get token consumption",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get token consumption": {
+      "main": [
+        [
+          {
+            "node": "Compose output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compose output": {
+      "main": [
+        []
+      ]
+    },
+    "Generate init model": {
+      "main": [
+        [
+          {
+            "node": "Create total token row (gen)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "plateau-detector": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Azure gpt-5.1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'model-generator-mesh'": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create total token row (eval)": {
+      "main": [
+        [
+          {
+            "node": "Call 'create-model-generator-mesh'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create total token row (gen)": {
+      "main": [
+        [
+          {
+            "node": "Create total token row (eval)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "b3b6ae45-c7fb-4c4c-b9aa-81c637e1b61b",
+  "activeVersionId": "b3b6ae45-c7fb-4c4c-b9aa-81c637e1b61b",
+  "versionCounter": 221,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-05-17T09:03:52.560Z",
+      "createdAt": "2026-05-17T09:03:52.560Z",
+      "role": "workflow:owner",
+      "workflowId": "Aa0UhnE5CNTh17ly",
+      "projectId": "EqTnf87AG5HyB5dF",
+      "project": {
+        "updatedAt": "2026-03-14T17:21:54.570Z",
+        "createdAt": "2026-03-14T17:05:46.633Z",
+        "id": "EqTnf87AG5HyB5dF",
+        "name": "Luca Lakenbrink <luca.lakenbrink@fom-net.de>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "cd08fa2f-3e6c-4bf5-8905-bbf2d09f907c"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": "Version b3b6ae45",
+    "description": ""
+  }
+}

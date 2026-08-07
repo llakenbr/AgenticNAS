@@ -1,0 +1,312 @@
+{
+  "edges": [
+    {
+      "source": "conv1",
+      "target": "bn1"
+    },
+    {
+      "source": "bn1",
+      "target": "relu1"
+    },
+    {
+      "source": "relu1",
+      "target": "conv2"
+    },
+    {
+      "source": "relu1",
+      "target": "conv3",
+      "edge_type": "skip"
+    },
+    {
+      "source": "conv2",
+      "target": "bn2"
+    },
+    {
+      "source": "bn2",
+      "target": "relu2"
+    },
+    {
+      "source": "relu2",
+      "target": "conv3"
+    },
+    {
+      "source": "conv3",
+      "target": "bn3"
+    },
+    {
+      "source": "bn3",
+      "target": "relu3"
+    },
+    {
+      "source": "relu3",
+      "target": "conv4"
+    },
+    {
+      "source": "relu3",
+      "target": "conv5",
+      "edge_type": "skip"
+    },
+    {
+      "source": "conv4",
+      "target": "bn4"
+    },
+    {
+      "source": "bn4",
+      "target": "relu4"
+    },
+    {
+      "source": "relu4",
+      "target": "conv5"
+    },
+    {
+      "source": "conv5",
+      "target": "bn5"
+    },
+    {
+      "source": "bn5",
+      "target": "relu5"
+    },
+    {
+      "source": "relu5",
+      "target": "pool1"
+    },
+    {
+      "source": "pool1",
+      "target": "flatten"
+    },
+    {
+      "source": "flatten",
+      "target": "fc1"
+    },
+    {
+      "source": "fc1",
+      "target": "relu_fc1"
+    },
+    {
+      "source": "relu_fc1",
+      "target": "drop1"
+    },
+    {
+      "source": "drop1",
+      "target": "output_linear"
+    },
+    {
+      "source": "output_linear",
+      "target": "output_activation"
+    }
+  ],
+  "nodes": {
+    "bn1": {
+      "layer": {
+        "name": "bn1",
+        "affine": true,
+        "layer_type": "BatchNorm2d",
+        "num_features": 64
+      },
+      "node_id": "bn1"
+    },
+    "bn2": {
+      "layer": {
+        "name": "bn2",
+        "affine": true,
+        "layer_type": "BatchNorm2d",
+        "num_features": 64
+      },
+      "node_id": "bn2"
+    },
+    "bn3": {
+      "layer": {
+        "name": "bn3",
+        "affine": true,
+        "layer_type": "BatchNorm2d",
+        "num_features": 128
+      },
+      "node_id": "bn3"
+    },
+    "bn4": {
+      "layer": {
+        "name": "bn4",
+        "affine": true,
+        "layer_type": "BatchNorm2d",
+        "num_features": 128
+      },
+      "node_id": "bn4"
+    },
+    "bn5": {
+      "layer": {
+        "name": "bn5",
+        "affine": true,
+        "layer_type": "BatchNorm2d",
+        "num_features": 256
+      },
+      "node_id": "bn5"
+    },
+    "fc1": {
+      "layer": {
+        "name": "fc1",
+        "layer_type": "Linear",
+        "in_features": "auto",
+        "out_features": 256
+      },
+      "node_id": "fc1"
+    },
+    "conv1": {
+      "layer": {
+        "name": "conv1",
+        "stride": 1,
+        "padding": 1,
+        "layer_type": "Conv2d",
+        "in_channels": 3,
+        "kernel_size": 3,
+        "out_channels": 64
+      },
+      "node_id": "conv1"
+    },
+    "conv2": {
+      "layer": {
+        "name": "conv2",
+        "stride": 1,
+        "padding": 1,
+        "layer_type": "Conv2d",
+        "in_channels": "auto",
+        "kernel_size": 3,
+        "out_channels": 64
+      },
+      "node_id": "conv2"
+    },
+    "conv3": {
+      "layer": {
+        "name": "conv3",
+        "stride": 2,
+        "padding": 1,
+        "layer_type": "Conv2d",
+        "in_channels": "auto",
+        "kernel_size": 3,
+        "out_channels": 128
+      },
+      "node_id": "conv3"
+    },
+    "conv4": {
+      "layer": {
+        "name": "conv4",
+        "stride": 1,
+        "padding": 1,
+        "layer_type": "Conv2d",
+        "in_channels": 128,
+        "kernel_size": 3,
+        "out_channels": 128
+      },
+      "node_id": "conv4"
+    },
+    "conv5": {
+      "layer": {
+        "name": "conv5",
+        "stride": 2,
+        "padding": 1,
+        "layer_type": "Conv2d",
+        "in_channels": "auto",
+        "kernel_size": 3,
+        "out_channels": 256
+      },
+      "node_id": "conv5"
+    },
+    "drop1": {
+      "layer": {
+        "p": 0.3,
+        "name": "drop1",
+        "layer_type": "Dropout"
+      },
+      "node_id": "drop1"
+    },
+    "pool1": {
+      "layer": {
+        "name": "pool1",
+        "stride": 2,
+        "layer_type": "MaxPool2d",
+        "kernel_size": 2
+      },
+      "node_id": "pool1"
+    },
+    "relu1": {
+      "layer": {
+        "name": "relu1",
+        "inplace": false,
+        "layer_type": "ReLU"
+      },
+      "node_id": "relu1"
+    },
+    "relu2": {
+      "layer": {
+        "name": "relu2",
+        "inplace": false,
+        "layer_type": "ReLU"
+      },
+      "node_id": "relu2"
+    },
+    "relu3": {
+      "layer": {
+        "name": "relu3",
+        "inplace": false,
+        "layer_type": "ReLU"
+      },
+      "node_id": "relu3"
+    },
+    "relu4": {
+      "layer": {
+        "name": "relu4",
+        "inplace": false,
+        "layer_type": "ReLU"
+      },
+      "node_id": "relu4"
+    },
+    "relu5": {
+      "layer": {
+        "name": "relu5",
+        "inplace": false,
+        "layer_type": "ReLU"
+      },
+      "node_id": "relu5"
+    },
+    "flatten": {
+      "layer": {
+        "name": "flatten",
+        "layer_type": "Flatten"
+      },
+      "node_id": "flatten"
+    },
+    "relu_fc1": {
+      "layer": {
+        "name": "relu_fc1",
+        "inplace": false,
+        "layer_type": "ReLU"
+      },
+      "node_id": "relu_fc1"
+    },
+    "output_linear": {
+      "layer": {
+        "bias": true,
+        "name": "output_linear",
+        "layer_type": "Linear",
+        "in_features": "auto",
+        "out_features": 10
+      },
+      "node_id": "output_linear"
+    },
+    "output_activation": {
+      "layer": {
+        "dim": 1,
+        "name": "output_activation",
+        "layer_type": "Softmax"
+      },
+      "node_id": "output_activation"
+    }
+  },
+  "input_shape": [
+    256,
+    3,
+    32,
+    32
+  ],
+  "exit_node_id": "output_activation",
+  "entry_node_id": "conv1"
+}

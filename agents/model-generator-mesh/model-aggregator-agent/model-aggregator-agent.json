@@ -1,0 +1,115 @@
+{
+  "agent_id": "{{ $json.agent_id }}",
+  "template_id": "{{ $json.agent_id }}-v0.0.5",
+  "name": "{{ $json.agent_id }}",
+  "description": "Aggregates multiple explored architecture candidates, applies strict decision logic, and outputs a selected or constrained-synthesized blueprint for taxonomy construction.",
+  "model": {
+    "provider": "azure_openai",
+    "model_name": "{{ $json.model_name }}",
+    "temperature": {{ $json.model_temp.toNumber() || 1.0 }},
+    "streaming": false
+  },
+  "prompt": {
+        "system": "You are a Neural Network Architecture aggregator Agent (model-aggregator-agent). Your task has two modes: consolidate generated candidates or refine a provided candidate blueprint for downstream taxonomy construction.\n\nSEARCH_SPACE_SUMMARY is provided in the next system message. Candidate input is provided in the user message. Both are IMMUTABLE runtime context. No external knowledge or assumptions.\n\nYour role is DECISION AND CONSOLIDATION ONLY. You MUST NOT output a full nn_taxonomy model. You MUST NOT call validation tools.\n\nMode handling:\n- mode = generate: evaluate explored candidates, rank them, and optionally synthesize a constrained hybrid.\n- mode = refine: evaluate the provided refinement candidate together with orchestrator guidance and output one improved blueprint.\n\nStrict workflow:\n1. Read mode and normalize candidate input against the same rubric.\n2. Score evidence on design-space fit, architectural plausibility, taxonomy likelihood, and cost efficiency.\n3. If mode=generate, select strongest candidate or constrained synthesis when compatibility is explicit.\n4. If mode=refine, produce one constrained refinement of the provided candidate (selection_mode may still be selected or synthesized).\n5. Output exactly one final blueprint plus scoring trace.\n\nIronclad rules:\n- No external additions outside SEARCH_SPACE_SUMMARY.\n- No unconstrained merging or arbitrary redesign in refine mode.\n- If evidence is weak, still output the best available blueprint and record uncertainty.\n- Treat user-provided candidate order as authoritative when multiple candidates are provided.\n- JSON only.\n\nOutput format exactly:\n{\n  \"selected_candidate\": {\n    \"selection_mode\": \"selected|synthesized\",\n    \"source_candidate_ids\": [\"\"],\n    \"model_family\": \"\",\n    \"decision_rationale\": \"\",\n    \"blueprint\": {\n      \"backbone\": \"\",\n      \"block_pattern\": [\"\"],\n      \"connectivity\": \"\",\n      \"normalization\": \"\",\n      \"regularization\": \"\",\n      \"required_spec_elements\": [\"\"],\n      \"forbidden_or_avoided_elements\": [\"\"]\n    },\n    \"scores\": {\n      \"design_space_fit\": 0,\n      \"architectural_plausibility\": 0,\n      \"taxonomy_likelihood\": 0,\n      \"cost_efficiency\": 0,\n      \"overall\": 0\n    },\n    \"uncertainty_notes\": [\"\"]\n  }\n}",
+        "system_context": [
+        "SEARCH_SPACE_SUMMARY (IMMUTABLE — COMPACT DESIGN SPACE VIEW):\n {{ $('Edit Fields').item.json.model_spec_compact }}"
+        ],
+        "developer": null
+    },
+  "tools": [],
+  "memory": {
+    "backend": "postgres",
+    "thread_table": "n8n_chat_histories",
+    "max_history_messages": 5
+  },
+  "output_schema": {
+    "title": "ModelaggregatorOutputSchema",
+    "type": "object",
+    "required": ["selected_candidate"],
+    "additionalProperties": false,
+    "properties": {
+      "selected_candidate": {
+        "type": "object",
+        "required": [
+          "selection_mode",
+          "source_candidate_ids",
+          "model_family",
+          "decision_rationale",
+          "blueprint",
+          "scores",
+          "uncertainty_notes"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "selection_mode": {
+            "type": "string",
+            "enum": ["selected", "synthesized"]
+          },
+          "source_candidate_ids": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "model_family": { "type": "string" },
+          "decision_rationale": { "type": "string" },
+          "blueprint": {
+            "type": "object",
+            "required": [
+              "backbone",
+              "block_pattern",
+              "connectivity",
+              "normalization",
+              "regularization",
+              "required_spec_elements",
+              "forbidden_or_avoided_elements"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "backbone": { "type": "string" },
+              "block_pattern": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "connectivity": { "type": "string" },
+              "normalization": { "type": "string" },
+              "regularization": { "type": "string" },
+              "required_spec_elements": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "forbidden_or_avoided_elements": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          },
+          "scores": {
+            "type": "object",
+            "required": [
+              "design_space_fit",
+              "architectural_plausibility",
+              "taxonomy_likelihood",
+              "cost_efficiency",
+              "overall"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "design_space_fit": { "type": "number" },
+              "architectural_plausibility": { "type": "number" },
+              "taxonomy_likelihood": { "type": "number" },
+              "cost_efficiency": { "type": "number" },
+              "overall": { "type": "number" }
+            }
+          },
+          "uncertainty_notes": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    }
+  },
+  "metadata": {
+    "n8n_origin": true,
+    "session_key_pattern": "{{ $('Set agent-sessionID').item.json['agent-sessionID'] }}"
+  }
+}
