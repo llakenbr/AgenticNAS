@@ -4,4 +4,7 @@
 
 [submodule "zero-cost-nas"]
 	path = apis/performance-predictor/zero-cost-predictor/zero-cost-nas
-	url = https://github.com/mohsaied/zero-cost-nas
+	url = https://github.com/mohsaied/zero-cost-nas.git
+[submodule "nn-core-taxonomy"]
+	path = nn-core-taxonomy
+	url = https://github.com/llakenbr/AgenticNAS-nn-taxonomy.git
