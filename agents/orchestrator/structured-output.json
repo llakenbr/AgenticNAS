@@ -1,0 +1,27 @@
+{
+  "type": "object",
+  "required": ["model_ID", "model_test_accuracy"],
+  "properties": {
+    "model_ID": {
+      "type": "string",
+      "description": "The final validated model ID (after real benchmark confirmation)."
+    },
+    "model_test_accuracy": {
+      "oneOf": [
+        {
+          "type": "number",
+          "description": "The test accuracy of the final validated model."
+        },
+        {
+          "type": "null",
+          "description": "Use null when no valid accuracy is present so the plateau-detector skips the observation."
+        }
+      ]
+    },
+    "summary": {
+      "type": "string",
+      "description": "Short summary of the model."
+    }
+  },
+  "additionalProperties": false
+}

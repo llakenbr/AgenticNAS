@@ -1,0 +1,73 @@
+CONTEXT
+- The previous batch of candidates did not meet promotion criteria, and a clear plateau or finalization condition has NOT been confirmed.
+
+REQUIRED BEHAVIOR
+
+1. Retrieve and reflect on state:
+   - Call retrieve_state to load the latest search state.
+   - Optionally call get_episodes (created_at desc, limit 30) if additional historical context is needed.
+   - Internally review:
+     - Past candidates and D2 metrics (zero-cost and training).
+     - Previous hypotheses and strategies.
+     - Current phase, generator_calls, evaluator_calls, bestmodel_ID, besttestaccuracy, episode_has_training_call.
+
+2. Decide based on the mandatory training gate:
+   - If training_gate_satisfied = true:
+     - Do NOT keep looping on zero-cost only.
+     - Select the least-risk / most promising candidate for promotion (balanced GN/SN/GR, no critical FI/JC/PL/SF/SFB failures, strong D2 comments).
+     - Call model-evaluator with mode=training for that candidate (promotion training).
+   - If training_gate_satisfied = false:
+     - Ensure the “no episode without training” rule:
+       - If this episode is about to end (caps reached or explicit boundary) and episode_has_training_call = false:
+         - Select the least-risk / most promising candidate based on D2.
+         - Call model-evaluator with mode=training ONCE as a probe.
+     - Otherwise:
+       - Immediately generate new candidates:
+         - Update your internal architectural hypothesis using failure patterns from D2 and any plateau-detector or summary inputs.
+         - Call model-generator-mesh with mode=generate using this explicit hypothesis targeting the identified weaknesses.
+       - For each new candidate:
+         - Call model-evaluator with mode=zero-cost.
+         - Call D2 get-model-performance by model_ID and update ranking.
+
+3. Strategic logging and episode closure:
+   - When you update your strategy or close an episode:
+     - Call log_state with:
+       - summarytext: brief summary of:
+         - What has been tried so far.
+         - What failed or underperformed.
+         - Your new architectural hypothesis or next strategy.
+       - summarystate: include updated sessionstatus, currentphase, previousphase, transitionreason, candidatesevaluatedcount, refinementcycles, bestmodel_ID, bestzerocostsnapshot, besttrainedmodel_ID, besttestaccuracy, lastbenchmark_ID, nextaction, generatorcalls, evaluatorcalls.
+   - Then continue with the next appropriate generator/evaluator/validator call as dictated by the system prompt.
+
+CONSTRAINTS
+
+- Per-episode caps:
+  - No more than 5 model-generator-mesh calls and 5 model-evaluator calls per episode.
+  - If a cap is reached:
+    - If episode_has_training_call = false:
+      - Select the least-risk / most promising candidate based on D2.
+      - Call model-evaluator with mode=training ONCE as a probe for that candidate.
+      - Update state from D2.
+    - Call log_state to close the episode and record your strategy for the next episode.
+    - Start a new episode with a revised hypothesis and nextaction.
+
+- Training gate semantics:
+  - Probe training:
+    - Allowed once per episode at end, even if training_gate_satisfied = false.
+  - Promotion training:
+    - Only when training_gate_satisfied = true, for serious selection among candidates.
+
+- Output modality:
+  - Output ONLY tool calls in this continuation step.
+  - No explanatory text, no analysis, no metric descriptions, no free-form language are allowed.
+
+- Source of truth:
+  - Never invent or guess model IDs, benchmark IDs, or metrics.
+  - Use only values returned by model-generator-mesh and D1/D2.
+  - If an ID or metric is not present in D1/D2, retrieve it before use.
+
+- Coverage and next actions:
+  - Continue the loop only until the coverage gate is satisfied for the current hypothesis.
+  - After coverage is satisfied, the next step must be:
+    - Promotion to training (if training_gate_satisfied), OR
+    - Hypothesis change and logged restart, not another open-ended zero-cost-only cycle.

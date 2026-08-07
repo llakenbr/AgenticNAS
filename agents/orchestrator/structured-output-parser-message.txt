@@ -1,0 +1,28 @@
+Instructions:
+--------------
+{instructions}
+--------------
+Completion:
+--------------
+{completion}
+--------------
+Error:
+--------------
+{error}
+--------------
+
+Return only one JSON object that is safe for the downstream plateau-detector.
+
+Rules:
+- Do not invent, guess, or repair missing values.
+- Preserve any valid model_test_accuracy exactly as given. Never alter, round, normalize, or substitute it.
+- If the Completion does not contain a valid model result, output an empty-safe object instead of fabricating data.
+- For missing model_ID, use an empty string.
+- For missing model_test_accuracy, use null so the workflow will skip the observation.
+- For missing summary, use an empty string.
+- Never use 0, 0.0, NaN, "unknown", or any other placeholder for model_test_accuracy.
+- Ignore any extra commentary, refusal text, or malformed fragments in the Completion.
+
+The instructions contains the parser's format instructions. Follow those instructions exactly.
+
+If the Completion contains a valid result, preserve only the valid values and do not invent any missing fields.

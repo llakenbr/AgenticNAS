@@ -1,0 +1,13 @@
+TRAINABILITY:
+  OPT_DIFFICULTY: ""
+  CONV_SPEED: ""
+  STABILITY: ""
+ISSUES[1]:
+  - ME: []
+    MOD: ""
+    EFF: ""
+EXPECTED_AFTER:
+  STABILITY: ""
+  CONV_SPEED: ""
+  GEN: ""
+  OVERFITTING: ""

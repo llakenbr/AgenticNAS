@@ -1,0 +1,175 @@
+services:
+  model-faciliator:
+    build:
+      context: ../
+      dockerfile: ./apis/model-faciliator/dockerfile
+    container_name: model-faciliator
+    restart: unless-stopped
+    networks:
+      - automl-mesh
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 3G
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_DIR=/app/logs
+    volumes:
+      - ${LOG_HOST_DIR:-../logs}/model-faciliator:/app/logs
+    ports:
+      - "7002:7002"
+
+
+  performance-predictor:
+    build:
+      context: ../
+      dockerfile: ./apis/performance-predictor/dockerfile
+    container_name: performance-predictor
+    restart: unless-stopped
+    networks:
+      - automl-mesh
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    environment:
+      LOG_LEVEL: INFO
+    volumes:
+      - ${LOG_HOST_DIR:-../logs}/performance-predictor:/app/logs
+      - ${DATASET_HOST_DIR:-../datasets}:/app/_dataset
+    ports:
+      - "7003:7003"
+
+
+  plateau-detector:
+    build:
+      context: ../
+      dockerfile: ./apis/plateau-detector/dockerfile
+    container_name: plateau-detector
+    restart: unless-stopped
+    networks:
+      - automl-mesh
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+    environment:
+      LOG_LEVEL: INFO
+      LOG_DIR: /app/logs
+
+      POSTGRES_HOST: n8n_postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: model_db
+      POSTGRES_USER: model_db_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_model_db_password
+
+      PLATEAU_WINDOW_SIZE: 5
+      PLATEAU_MIN_GAIN: 1.00
+    volumes:
+      - ${LOG_HOST_DIR:-../logs}/plateau-detector:/app/logs
+    ports:
+      - "7005:7005"
+    secrets:
+      - postgres_model_db_password
+    depends_on:
+      - postgres
+
+
+  model-trainer:
+    build:
+      context: ../
+      dockerfile: ./apis/model-trainer/dockerfile
+    container_name: model-trainer
+    restart: unless-stopped
+    networks:
+      - automl-mesh
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    environment:
+      LOG_LEVEL: INFO
+      LOG_DIR: /app/logs
+    volumes:
+      - ${LOG_HOST_DIR:-../logs}/model-trainer:/app/logs
+      - ${DATASET_HOST_DIR:-../datasets}:/app/_dataset
+    ports:
+      - "7007:7007"
+
+  agent-runtime:
+    build:
+      context: ../
+      dockerfile: ./apis/agent-runtime/dockerfile
+    container_name: agent-runtime
+    networks:
+      - automl-mesh
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+    environment:
+      LOG_LEVEL: INFO
+      LOG_DIR: /app/logs
+
+      POSTGRES_HOST: n8n_postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: agent_runtime
+      POSTGRES_USER: agent_runtime_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_agent_runtime_password
+
+      AZURE_OPENAI_API_VERSION: 2024-12-01-preview
+      AZURE_OPENAI_API_KEY_FILE: /run/secrets/azure_api_key
+      AZURE_OPENAI_API_ENDPOINT_FILE: /run/secrets/azure_api_endpoint
+    ports:
+      - "7010:7010"
+    volumes:
+      - ${LOG_HOST_DIR:-../logs}/agent-runtime:/app/logs
+    secrets:
+      - postgres_agent_runtime_password
+      - azure_api_key
+      - azure_api_endpoint
+    depends_on:
+      - postgres
+
+  model-trainer:
+    build:
+      context: ../
+      dockerfile: ./apis/model-trainer/dockerfile
+    container_name: model-trainer
+    networks:
+      - automl-mesh
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    environment:
+      LOG_LEVEL: INFO
+    volumes:
+      - C:\Users\linki\Documents\AutoML\logs\model-trainer:/app/logs
+      - C:\Users\linki\Documents\AutoML\datasets:/app/_dataset
+    ports:
+      - "7007:7007"
+
+secrets:
+  postgres_agent_runtime_password:
+    file: ./secrets/postgres_agent_runtime_password.txt
+  postgres_agent_memory_password:
+    file: ./secrets/postgres_agent_memory_password.txt
+  postgres_model_db_password:
+    file: ./secrets/postgres_model_db_password.txt
+  azure_api_key:
+    file: ./secrets/azure_api_key.txt
+  azure_api_endpoint:
+    file: ./secrets/azure_api_endpoint.txt

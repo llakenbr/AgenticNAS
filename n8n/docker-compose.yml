@@ -1,0 +1,85 @@
+volumes:
+  db_storage:
+  n8n_storage:
+
+services:
+  postgres:
+    image: postgres:18
+    container_name: n8n_postgres
+    networks:
+      - automl-mesh
+    restart: always
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+      - POSTGRES_NON_ROOT_USER
+      - POSTGRES_NON_ROOT_PASSWORD
+      - MODEL_DB_NAME
+      - MODEL_DB_USER
+      - MODEL_DB_PASSWORD
+      - AGENT_RUNTIME_DB_NAME
+      - AGENT_RUNTIME_DB_USER
+      - AGENT_RUNTIME_DB_PASSWORD
+      - AGENT_MEMORY_DB_NAME
+      - AGENT_MEMORY_DB_USER
+      - AGENT_MEMORY_DB_PASSWORD
+    ports:
+      - 5432:5432
+    volumes:
+      - ${N8N_POSTGRES_STORAGE_HOST_DIR:-../volumes/n8n_postgres_storage}:/var/lib/postgresql
+      - ./init-data.sh:/docker-entrypoint-initdb.d/init-data.sh
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -h localhost -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  n8n-backup:
+    image: docker:cli
+    container_name: n8n_backup
+    networks:
+      - automl-mesh
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${N8N_BACKUP_HOST_DIR:-./backup}:/backup
+    entrypoint: >
+      /bin/sh -c "while true; do
+        if ! docker ps --filter 'name=n8n' --format '{{.Names}}' | grep -q '^n8n$$'; then
+          echo \"n8n not running at $$(date), skipping...\";
+          sleep 60;
+          continue;
+        fi;
+        echo \"Running n8n workflow export at $$(date)\";
+        docker exec n8n n8n export:workflow --all --backup --output=/home/node/.n8n/exports/ || echo \"Export failed, n8n possibly not ready\";
+        docker cp n8n:/home/node/.n8n/exports/. /backups/ || echo \"Copy failed\";
+        echo \"Backup complete at $$(date)\";
+        sleep 600;
+      done"
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    container_name: n8n
+    networks:
+      - automl-mesh
+    restart: always
+    environment:
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=${POSTGRES_DB}
+      - DB_POSTGRESDB_USER=${POSTGRES_USER}
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
+      - N8N_RUNNERS_ENABLED=true
+    ports:
+      - 5678:5678
+    links:
+      - postgres
+    volumes:
+      - ${N8N_STORAGE_HOST_DIR:-../volumes/n8n_storage}:/home/node/.n8n
+    depends_on:
+      postgres:
+        condition: service_healthy
+      n8n-backup:
+        condition: service_started
+

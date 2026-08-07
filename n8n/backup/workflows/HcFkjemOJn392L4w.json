@@ -1,0 +1,603 @@
+{
+  "updatedAt": "2026-04-17T11:06:07.373Z",
+  "createdAt": "2026-04-12T10:03:17.316Z",
+  "id": "HcFkjemOJn392L4w",
+  "name": "model-trainer",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "sessionID"
+            },
+            {
+              "name": "model_ID"
+            },
+            {
+              "name": "dataset_name"
+            },
+            {
+              "name": "loss_function"
+            },
+            {
+              "name": "optimizer"
+            },
+            {
+              "name": "epochs",
+              "type": "number"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        80
+      ],
+      "id": "e6d7f928-60ed-47e7-a820-52f12c4b9f18",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://model-trainer:7007/submit-train-job",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model_spec",
+              "value": "={{ $json.nn_taxonomy }}"
+            },
+            {
+              "name": "training_parameters.loss_function",
+              "value": "={{ $('When Executed by Another Workflow').item.json.loss_function }}"
+            },
+            {
+              "name": "training_parameters.optimizer",
+              "value": "={{ $('When Executed by Another Workflow').item.json.optimizer }}"
+            },
+            {
+              "name": "training_parameters.epochs",
+              "value": "={{ $('When Executed by Another Workflow').item.json.epochs }}"
+            },
+            {
+              "name": "training_parameters.dataset_name",
+              "value": "={{ $('When Executed by Another Workflow').item.json.dataset_name }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        448,
+        80
+      ],
+      "id": "d69f259c-1267-4099-9aa9-7475af495be2",
+      "name": "submit-train-job"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "models",
+          "mode": "list",
+          "cachedResultName": "models"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "id",
+              "value": "={{ $json.model_ID }}"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "nn_taxonomy"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        224,
+        80
+      ],
+      "id": "e69707d2-f03f-41ca-a1d2-6873a31374ad",
+      "name": "Select rows from a table",
+      "credentials": {
+        "postgres": {
+          "id": "MTKdQt9xBfmirQQt",
+          "name": "model_db"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 15
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        80
+      ],
+      "id": "345f1e95-86f1-4fe5-9aa4-539a1778ae74",
+      "name": "Wait",
+      "webhookId": "5eac05a5-e9b7-4341-a1e1-776da8904b16"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "running",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "50da9fe3-3910-4dc3-94e5-20aaafc784eb"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "16572528-6dde-4fa4-91a6-73f4575fec8e",
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "succeeded",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "5089395c-16b8-44e6-8aab-b838fccad113",
+                    "leftValue": "=failed {{ $json.status }}",
+                    "rightValue": "failed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1120,
+        64
+      ],
+      "id": "c7b7cfd7-4314-4e10-969f-ff3a044df18b",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "url": "=http://model-trainer:7007/train-jobs/{{ $('submit-train-job').item.json.job_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        896,
+        16
+      ],
+      "id": "57a6461a-2084-4623-9380-eeca83b05b97",
+      "name": "Job status"
+    },
+    {
+      "parameters": {
+        "url": "=http://model-trainer:7007/train-jobs/{{ $('submit-train-job').item.json.job_id }}/result",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text",
+              "outputPropertyName": "training-results"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1344,
+        -16
+      ],
+      "id": "f42f30dd-1318-4826-8582-84dd13d2d2aa",
+      "name": "Job results"
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ $('Job status').item.json.error }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        176
+      ],
+      "id": "e843c60c-cd5c-4e97-9086-14e81668fe51",
+      "name": "Stop and Error"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "model_benchmarks",
+          "mode": "list",
+          "cachedResultName": "model_benchmarks"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "model_id": "={{ $('When Executed by Another Workflow').item.json.model_ID }}",
+            "benchmark_name": "training",
+            "run_label": "={{ $('submit-train-job').item.json.job_id }}",
+            "metrics": "={{ typeof $json['training-results'] === 'string' ? JSON.parse($json['training-results']) : $json['training-results'] }}",
+            "config": "={{ $('When Executed by Another Workflow').item.json.toJsonString() }}",
+            "session_id": "={{ $('When Executed by Another Workflow').item.json.sessionID }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "model_id",
+              "displayName": "model_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "benchmark_name",
+              "displayName": "benchmark_name",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "dataset",
+              "displayName": "dataset",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "run_label",
+              "displayName": "run_label",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "metrics",
+              "displayName": "metrics",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "config",
+              "displayName": "config",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "model_remarks",
+              "displayName": "model_remarks",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "outputColumns": [
+            "id"
+          ],
+          "replaceEmptyStrings": true
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1568,
+        -16
+      ],
+      "id": "d138ba46-902c-424a-b33e-220178087054",
+      "name": "Store results",
+      "credentials": {
+        "postgres": {
+          "id": "MTKdQt9xBfmirQQt",
+          "name": "model_db"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e66b085e-8696-465d-9cc7-360419f369ec",
+              "name": "model_benchmark_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1792,
+        -16
+      ],
+      "id": "d2643ed8-65f4-425e-bdb3-cf4134de5e16",
+      "name": "Compose output"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Select rows from a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select rows from a table": {
+      "main": [
+        [
+          {
+            "node": "submit-train-job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "submit-train-job": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Job status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Job results",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Job status": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Job results": {
+      "main": [
+        [
+          {
+            "node": "Store results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store results": {
+      "main": [
+        [
+          {
+            "node": "Compose output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "sessionID": "test_v0.1.0",
+          "dataset_name": "cifar10",
+          "loss_function": "CrossEntropyLoss",
+          "optimizer": "AdamW",
+          "epochs": 2,
+          "model_ID": "4ce5b0bf-61ee-453a-84f7-294884a2ec6e"
+        }
+      }
+    ]
+  },
+  "versionId": "5af96f2a-3df1-493f-b73d-b7885314d85d",
+  "activeVersionId": "5af96f2a-3df1-493f-b73d-b7885314d85d",
+  "versionCounter": 207,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-04-12T10:03:17.316Z",
+      "createdAt": "2026-04-12T10:03:17.316Z",
+      "role": "workflow:owner",
+      "workflowId": "HcFkjemOJn392L4w",
+      "projectId": "EqTnf87AG5HyB5dF",
+      "project": {
+        "updatedAt": "2026-03-14T17:21:54.570Z",
+        "createdAt": "2026-03-14T17:05:46.633Z",
+        "id": "EqTnf87AG5HyB5dF",
+        "name": "Luca Lakenbrink <luca.lakenbrink@fom-net.de>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "cd08fa2f-3e6c-4bf5-8905-bbf2d09f907c"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": "Version 5af96f2a",
+    "description": ""
+  }
+}

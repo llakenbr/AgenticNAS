@@ -1,0 +1,4 @@
+{
+    "message": "Democratic consolidation task:\n- The orchestrator request is below.\n- The json_input.evaluations field contains the complete list of evaluator JSON outputs.\n- Merge matching signals by majority vote and return one consensus result using the same schema.\n\nThis is the request from the overarching Orchestrator Agent:\n{{ $('When Executed by Another Workflow').item.json.chatInput }}",
+    "json_input": {"evaluations": {{ $json.evaluations }}}
+}

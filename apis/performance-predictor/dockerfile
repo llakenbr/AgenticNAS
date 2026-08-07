@@ -1,0 +1,21 @@
+FROM pytorch/pytorch:2.8.0-cuda12.9-cudnn9-runtime
+
+# Copy requirements first for better caching
+COPY apis/performance-predictor/requirements.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy and install nn_core source code
+COPY nn-core-taxonomy /nn-core-taxonomy
+RUN pip install /nn-core-taxonomy
+
+# Copy and install zero-cost-nas source code
+COPY apis/performance-predictor/zero-cost-predictor/zero-cost-nas /zero-cost-nas
+RUN pip install /zero-cost-nas
+
+# Copy app source code
+COPY apis/performance-predictor/app /app
+
+WORKDIR /app
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7003", "--workers", "1"]

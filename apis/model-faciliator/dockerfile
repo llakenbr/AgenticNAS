@@ -1,0 +1,19 @@
+FROM python:3.10-slim
+
+# Copy requirements first for better caching
+COPY apis/model-faciliator/requirements.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy nn_core source code
+COPY nn-core-taxonomy /nn-core-taxonomy
+
+# Install nn_core
+RUN pip install /nn-core-taxonomy
+
+# Copy app source code
+COPY apis/model-faciliator/app /app
+
+WORKDIR /app
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7002", "--workers", "1"]

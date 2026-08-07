@@ -1,0 +1,12 @@
+networks:
+  automl-mesh:
+    name: automl-mesh
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"
+
+include:
+  - apis/docker-compose.yml
+  - n8n/docker-compose.yml
+  # - serve/docker-compose.yml optional local serving of ollama models, requires nvidia-docker and GPU support
+ 

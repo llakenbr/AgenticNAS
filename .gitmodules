@@ -1,0 +1,6 @@
+[submodule "nn-core-taxonomy"]
+	path = nn-core-taxonomy
+	url = https://github.com/llakenbr/nn-core-taxonomy
+[submodule "apis/performance-predictor/zero-cost-predictor/zero-cost-nas"]
+	path = apis/performance-predictor/zero-cost-predictor/zero-cost-nas
+	url = https://github.com/llakenbr/zero-cost-nas

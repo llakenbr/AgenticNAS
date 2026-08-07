@@ -1,0 +1,585 @@
+{
+  "updatedAt": "2026-06-13T07:54:21.293Z",
+  "createdAt": "2026-04-15T07:16:41.805Z",
+  "id": "cOtne5iZCpOkDp6E",
+  "name": "create-model-generator-mesh",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "sessionID"
+            },
+            {
+              "name": "input_shape"
+            },
+            {
+              "name": "output_activation"
+            },
+            {
+              "name": "output_nodes"
+            },
+            {
+              "name": "model_spec_options"
+            },
+            {
+              "name": "model_spec_compact"
+            },
+            {
+              "name": "blank_model"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -64,
+        320
+      ],
+      "id": "e9687b95-3a83-4a00-92de-40cf8edf3c36",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "72fcf991-0918-4f3b-ae8e-8545b743e519",
+              "name": "model_spec_options",
+              "value": "={{ JSON.stringify($json.model_spec_options).slice(1,JSON.stringify($json.model_spec_options).length-1) }}",
+              "type": "string"
+            },
+            {
+              "id": "8fc85072-7d0d-4e9d-98e6-eed1bc18e1fe",
+              "name": "blank_model",
+              "value": "={{ JSON.stringify($json.blank_model).slice(1,JSON.stringify($json.blank_model).length-1) }}",
+              "type": "string"
+            },
+            {
+              "id": "0535f9b6-371a-416c-9ee9-955f8a71a6f7",
+              "name": "model_spec_compact",
+              "value": "={{ JSON.stringify($json.model_spec_compact).slice(1,JSON.stringify($json.model_spec_compact).length-1) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        384,
+        320
+      ],
+      "id": "4001fbe9-9dcd-49a2-b837-8a7c4eab2dcd",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://agent-runtime:7010/agents",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.request_json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1504,
+        32
+      ],
+      "id": "768c7a9c-a925-4ff9-ba84-f76491665631",
+      "name": "Create Agent"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "34948164-a9e7-49fb-9854-e9574e0310f1",
+              "leftValue": "={{ $json.loaded }}",
+              "rightValue": "=bool(true)",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1728,
+        288
+      ],
+      "id": "90a10d2d-757e-4da1-af7b-2de9a7c5a8f1",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "errorMessage": "={\n\"error_message\": \"Error during creation of agent\",\n\"response\": {{ JSON.stringify($('Create Agent')) }}\n}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1952,
+        288
+      ],
+      "id": "22753372-4478-4954-9272-17f271654bae",
+      "name": "Stop and Error"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "56f59304-e667-4781-beaf-262dde7d01a1",
+              "name": "agent-sessionID",
+              "value": "={{ $json.sessionID }}-model-generator",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        160,
+        320
+      ],
+      "id": "9cd4b99c-a383-4d24-88d6-aee859db816a",
+      "name": "Set agent-sessionID"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "eWhKLZ6q2ZTogEjU",
+          "mode": "list",
+          "cachedResultName": "agent-runtime-agents",
+          "cachedResultUrl": "/projects/EqTnf87AG5HyB5dF/datatables/eWhKLZ6q2ZTogEjU"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "mesh",
+              "keyValue": "model-generator"
+            }
+          ]
+        },
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        608,
+        320
+      ],
+      "id": "6dec9f6a-1f0a-4fbb-bdd5-4ba86da21d08",
+      "name": "Get agent templates"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        832,
+        320
+      ],
+      "id": "e58da5bc-44c4-4120-98b2-ff8181590fe0",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.mesh_layer }}",
+                    "rightValue": "model-explorer",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "235ce673-afa6-490a-8815-4e4e0423361d"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "09fef08f-cf51-4482-b984-e449d9569f14",
+                    "leftValue": "={{ $json.mesh_layer }}",
+                    "rightValue": "model-aggregator",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "89243ab7-657c-4ab8-bfe2-320eca2c5d71",
+                    "leftValue": "={{ $json.mesh_layer }}",
+                    "rightValue": "model-builder",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1056,
+        96
+      ],
+      "id": "115c2d20-7658-4dcf-81fe-03224cbf31e7",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3b1c4ebf-7038-468a-b17a-e4e9a47edf76",
+              "name": "request_json",
+              "value": "={\n  \"agent_id\": \"{{ $json.agent_id }}\",\n  \"template_id\": \"{{ $json.agent_id }}-v0.0.6\",\n  \"name\": \"{{ $json.agent_id }}\",\n  \"description\": \"Explores one strong neural network architecture concept within the immutable design space and outputs a compact structured candidate for downstream aggregation.\",\n  \"model\": {\n    \"provider\": \"azure_openai\",\n    \"model_name\": \"{{ $json.model_name }}\",\n    \"temperature\": {{ $json.model_temp.toNumber() || 1.0 }},\n    \"streaming\": false\n  },\n  \"prompt\": {\n    \"system\": \"You are a Neural Network Architecture Exploration Agent (model-explorer-agent). Your task has two modes: generate new candidates or refine an existing candidate.\\n\\nSEARCH_SPACE_SUMMARY is provided in the next system message. It is IMMUTABLE and OVERRIDES ALL CONFLICTS. No external knowledge or assumptions.\\n\\nYour role is EXPLORATION ONLY. You MUST NOT output a full nn_taxonomy model. You MUST NOT call validation tools. You MUST NOT invent elements outside SEARCH_SPACE_SUMMARY.\\n\\nMode handling:\\n- mode = generate: propose exactly one strong new architecture candidate within SEARCH_SPACE_SUMMARY.\\n- mode = refine: improve the provided refinement candidate while preserving its compatible core structure and fixing weak points signaled by orchestrator guidance.\\n\\nStrict workflow:\\n1. Read SEARCH_SPACE_SUMMARY and mode instructions.\\n2. If mode=generate, propose one promising architecture idea.\\n3. If mode=refine, transform the provided candidate into one improved variant that remains design-space compliant.\\n4. Summarize the final candidate in the required compact structured JSON.\\n5. Output JSON only.\\n\\nIronclad rules:\\n- Use SEARCH_SPACE_SUMMARY only.\\n- In refine mode, only make constrained edits; avoid arbitrary redesign.\\n- Output exactly one candidate object, not an array.\\n- No prose outside schema, no markdown.\\n- Keep values short and information-dense.\\n- Focus only on the most important architectural fields needed downstream.\\n\\nOutput format exactly:\\n{\\n  \\\"candidate\\\": {\\n    \\\"model_family\\\": \\\"\\\",\\n    \\\"backbone\\\": \\\"\\\",\\n    \\\"block_pattern\\\": [\\\"\\\"],\\n    \\\"connectivity\\\": \\\"\\\",\\n    \\\"spec_elements_used\\\": [\\\"\\\"],\\n    \\\"estimated_complexity\\\": \\\"low|medium|high\\\"\\n  }\\n}\",\n    \"system_context\": [\n      \"SEARCH_SPACE_SUMMARY (IMMUTABLE — COMPACT DESIGN SPACE VIEW):\\n {{ $('Edit Fields').item.json.model_spec_compact }}\"\n    ],\n    \"developer\": null\n  },\n  \"tools\": [],\n  \"memory\": {\n    \"backend\": \"postgres\",\n    \"thread_table\": \"n8n_chat_histories\",\n    \"max_history_messages\": 5\n  },\n  \"output_schema\": {\n    \"title\": \"ModelExplorerOutputSchema\",\n    \"type\": \"object\",\n    \"required\": [\"candidate\"],\n    \"additionalProperties\": false,\n    \"properties\": {\n      \"candidate\": {\n        \"type\": \"object\",\n        \"required\": [\n          \"model_family\",\n          \"backbone\",\n          \"block_pattern\",\n          \"connectivity\",\n          \"spec_elements_used\",\n          \"estimated_complexity\"\n        ],\n        \"additionalProperties\": false,\n        \"properties\": {\n          \"model_family\": {\n            \"type\": \"string\"\n          },\n          \"backbone\": {\n            \"type\": \"string\"\n          },\n          \"block_pattern\": {\n            \"type\": \"array\",\n            \"items\": {\n              \"type\": \"string\"\n            }\n          },\n          \"connectivity\": {\n            \"type\": \"string\"\n          },\n          \"spec_elements_used\": {\n            \"type\": \"array\",\n            \"items\": {\n              \"type\": \"string\"\n            }\n          },\n          \"estimated_complexity\": {\n            \"type\": \"string\",\n            \"enum\": [\"low\", \"medium\", \"high\"]\n          }\n        }\n      }\n    }\n  },\n  \"metadata\": {\n    \"n8n_origin\": true,\n    \"session_key_pattern\": \"{{ $('Set agent-sessionID').item.json['agent-sessionID'] }}\"\n  }\n}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1280,
+        -80
+      ],
+      "id": "1821ad88-a308-4977-9632-51f0cc0f9149",
+      "name": "model-explorer"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3b1c4ebf-7038-468a-b17a-e4e9a47edf76",
+              "name": "request_json",
+              "value": "={\n  \"agent_id\": \"{{ $json.agent_id }}\",\n  \"template_id\": \"{{ $json.agent_id }}-v0.0.12\",\n  \"name\": \"{{ $json.agent_id }}\",\n  \"description\": \"Constructs and validates a full nn-taxonomy neural network architecture from the selected architecture blueprint using nn_core via the model-facilitator API.\",\n  \"model\": {\n    \"provider\": \"azure_openai\",\n    \"model_name\": \"{{ $json.model_name }}\",\n    \"temperature\": {{ $json.model_temp.toNumber() || 1.0 }},\n    \"streaming\": false\n  },\n  \"prompt\": {\n    \"system\": \"You are a Neural Network Taxonomy Construction Agent (model-taxonomy-builder-agent). VIOLATION OF ANY RULE BELOW INVALIDATES ALL OUTPUTS-DISCARD AND RESTART.\\n\\nARCHITECTURE_SPEC is provided in the next system message. BLANK_MODEL_TEMPLATE is provided in the message after that. SELECTED_BLUEPRINT is provided in the user message. All are IMMUTABLE runtime context.\\n\\nARCHITECTURE_SPEC OVERRIDES ALL CONFLICTS. If SELECTED_BLUEPRINT conflicts with ARCHITECTURE_SPEC, obey ARCHITECTURE_SPEC. No external knowledge or assumptions.\\n\\nMandatory Tool: ALWAYS call 'validate_model_architecture' after each build. LOOP UNTIL {\\\"valid\\\": true}. Never skip, never assume validity, never output unvalidated models. You must invoke the tool in this agent and repair any errors yourself before continuing.\\n\\nTool-call contract for validate_model_architecture:\\n- Call the tool with exactly one argument object key named \\\"body\\\".\\n- The \\\"body\\\" value must be the complete architecture object to validate.\\n- Do not wrap the payload in any other keys. Do not send prose, markdown, or explanation text in the tool call.\\n- Exact shape required: {\\\"body\\\": {\\\"input_shape\\\": [...], \\\"entry_node_id\\\": \\\"...\\\", \\\"exit_node_id\\\": \\\"...\\\", \\\"nodes\\\": {...}, \\\"edges\\\": [...]}}\\n\\nStrict workflow:\\n1. Build candidate: Fill ONLY BLANK_MODEL_TEMPLATE slots using EXCLUSIVELY ARCHITECTURE_SPEC and SELECTED_BLUEPRINT elements.\\n2. Construct a complete nn_taxonomy architecture with exact shape compatibility from input to output.\\n3. Ensure nn_taxonomy structure matches ArchitectureSpec exactly: input_shape (array), nodes (object map keyed by node_id), edges (array), entry_node_id (string), exit_node_id (string).\\n4. For nodes: NEVER output a string and NEVER output an array. Each map value must be a NodeConfig object with {\\\"node_id\\\": string, \\\"layer\\\": object}.\\n5. Call 'validate_model_architecture' using the exact tool-call contract above.\\n6. If the tool returns any HTTP status other than 200: treat the architecture as invalid, parse the error payload (including detail/errors), fix the issues in this agent, then repeat.\\n7. If {\\\"valid\\\": false} OR a non-200 response includes a detail.errors list: treat every listed error as mandatory. Fix all listed issues in this agent before the next validation call.\\n8. If {\\\"valid\\\": true} and HTTP status is 200: use that validated spec as nn_taxonomy without manual rewriting.\\n9. TERMINATE AND OUTPUT ONLY AFTER {\\\"valid\\\": true} with HTTP 200.\\n\\nCompletion rule:\\n- Never return an empty or partial taxonomy when a valid one can be formed.\\n- If uncertain, emit the simplest valid taxonomy implied by BLANK_MODEL_TEMPLATE, preserving all fixed template nodes and edges and adding only the allowed intermediate nodes from ARCHITECTURE_SPEC.\\n- Never omit nodes or edges from the final nn_taxonomy.\\n\\nIronclad rules:\\n- Params, layers, classes, sizes, and connections must come from ARCHITECTURE_SPEC only, guided by SELECTED_BLUEPRINT.\\n- Shapes must match exactly from input through intermediates to output.\\n- Fixed input and output template parts are immutable and must not be changed.\\n- nn_taxonomy.edges must be an array containing only edge objects. Do not place extra_meta, model_name, strings, or any other keys/items inside edges.\\n- Never emit edge_type as null.\\n- For normal connections, omit edge_type (sequential is implicit).\\n- Use edge_type only when explicitly set to \\\"skip\\\".\\n- Output must be strict JSON: no comments, no trailing commas, no markdown, no code fences.\\n- Forbidden: adding unsupported elements, skipping validation, partial validation, deferring fixes, prose, markdown, explanations, output before valid:true, or proceeding after any non-200 validation response.\\n\\nOutput Format exactly:\\n{\\n  \\\"nn_taxonomy\\\": {\\n    \\\"input_shape\\\": [1, 3, 32, 32],\\n    \\\"entry_node_id\\\": \\\"node_in\\\",\\n    \\\"exit_node_id\\\": \\\"node_out\\\",\\n    \\\"nodes\\\": {},\\n    \\\"edges\\\": [\\n      { \\\"source\\\": \\\"node_in\\\", \\\"target\\\": \\\"node_out\\\" }\\n    ]\\n  },\\n  \\\"model_name\\\": \\\"\\\",\\n  \\\"extra_meta\\\": {\\n    \\\"selection_mode\\\": \\\"selected\\\",\\n    \\\"builder_notes\\\": \\\"\\\"\\n  }\\n}\\n\\nPre-output self-check (mandatory):\\n- Top-level keys exactly: nn_taxonomy, model_name, extra_meta.\\n- extra_meta is top-level, not nested in nn_taxonomy or edges.\\n- nn_taxonomy.edges is a JSON array of objects only.\\n- nn_taxonomy.nodes must contain at least the template nodes required to complete a valid graph.\\n\\nFailure handling: prioritize valid nn_taxonomy. Use empty strings only where necessary, but never omit required fields.\",\n    \"system_context\": [\n      \"ARCHITECTURE_SPEC (IMMUTABLE — EXCLUSIVE DESIGN SPACE):\\n {{ $('Edit Fields').item.json.model_spec_options }}\",\n      \"BLANK_MODEL_TEMPLATE (IMMUTABLE — complete intermediate slots only, never modify fixed input/output layers):\\n {{ $('Edit Fields').item.json.blank_model }}\"\n    ],\n    \"developer\": null\n  },\n  \"tools\": [\n    {\n      \"name\": \"validate_model_architecture\",\n      \"type\": \"http\",\n      \"config\": {\n        \"url\": \"http://model-faciliator:7002/validate\",\n        \"method\": \"POST\",\n        \"description\": \"Validates a neural network architecture specification against the nn_core ArchitectureSpec schema. Call this tool after constructing or modifying an architecture spec. Pass the complete architecture as the body field. Returns a success response with the parsed spec if valid, or a detailed error describing what is wrong. Only retry when the tool output is retryable=true; if retryable=false or the response is a transport/server failure, stop and surface the error instead of looping.\",\n        \"timeout_seconds\": 30,\n        \"auth\": { \"type\": \"none\" },\n        \"headers\": {},\n        \"params\": [\n          {\n            \"name\": \"body\",\n            \"type\": \"object\",\n            \"required\": true,\n            \"description\": \"The complete neural network architecture specification. Exact call shape: {\\\"body\\\": {\\\"input_shape\\\": [...], \\\"entry_node_id\\\": \\\"...\\\", \\\"exit_node_id\\\": \\\"...\\\", \\\"nodes\\\": {...}, \\\"edges\\\": [...]}}\"\n          }\n        ]\n      }\n    }\n  ],\n  \"memory\": {\n    \"backend\": \"postgres\",\n    \"thread_table\": \"n8n_chat_histories\",\n    \"max_history_messages\": 5\n  },\n  \"output_schema\": {\n    \"title\": \"AgentOutputSchema\",\n    \"type\": \"object\",\n    \"required\": [\"nn_taxonomy\", \"model_name\", \"extra_meta\"],\n    \"additionalProperties\": false,\n    \"properties\": {\n      \"nn_taxonomy\": {\n        \"type\": \"object\",\n        \"description\": \"Fully validated model JSON; stored as JSONB in nn_taxonomy.\",\n        \"additionalProperties\": false,\n        \"properties\": {\n          \"input_shape\": {\n            \"type\": \"array\",\n            \"description\": \"Input tensor shape [B,C,H,W]\",\n            \"items\": { \"type\": \"integer\" },\n            \"minItems\": 3\n          },\n          \"entry_node_id\": { \"type\": \"string\", \"description\": \"ID of the first node\" },\n          \"exit_node_id\": { \"type\": \"string\", \"description\": \"ID of the last node\" },\n          \"nodes\": {\n            \"type\": \"object\",\n            \"description\": \"Map of node_id -> NodeConfig objects (NOT a string, NOT an array)\",\n            \"minProperties\": 1,\n            \"additionalProperties\": {\n              \"type\": \"object\",\n              \"additionalProperties\": false,\n              \"properties\": {\n                \"node_id\": { \"type\": \"string\" },\n                \"layer\": {\n                  \"type\": \"object\",\n                  \"description\": \"Layer configuration object; must match ARCHITECTURE_SPEC for the selected layer_type\",\n                  \"properties\": {\n                    \"layer_type\": { \"type\": \"string\" },\n                    \"name\": { \"type\": \"string\" }\n                  },\n                  \"required\": [\"layer_type\", \"name\"],\n                  \"additionalProperties\": true\n                }\n              },\n              \"required\": [\"node_id\", \"layer\"]\n            }\n          },\n          \"edges\": {\n            \"type\": \"array\",\n            \"description\": \"List of edge objects\",\n            \"minItems\": 1,\n            \"items\": {\n              \"type\": \"object\",\n              \"properties\": {\n                \"source\": { \"type\": \"string\" },\n                \"target\": { \"type\": \"string\" },\n                \"edge_type\": { \"type\": \"string\", \"enum\": [\"sequential\", \"skip\"], \"default\": \"sequential\" }\n              },\n              \"required\": [\"source\", \"target\"],\n              \"additionalProperties\": false\n            }\n          }\n        },\n        \"required\": [\"input_shape\", \"entry_node_id\", \"exit_node_id\", \"nodes\", \"edges\"]\n      },\n      \"model_name\": {\n        \"type\": \"string\",\n        \"description\": \"Human-readable model name e.g. ConvNet_3x32x32_v1\"\n      },\n      \"extra_meta\": {\n        \"type\": \"object\",\n        \"additionalProperties\": false,\n        \"required\": [\"selection_mode\", \"builder_notes\"],\n        \"properties\": {\n          \"source_candidate_ids\": {\n            \"type\": \"array\",\n            \"items\": { \"type\": \"string\" }\n          },\n          \"selection_mode\": {\n            \"type\": \"string\",\n            \"enum\": [\"selected\", \"synthesized\"]\n          },\n          \"builder_notes\": {\n            \"type\": \"string\"\n          }\n        }\n      }\n    }\n  },\n  \"metadata\": {\n    \"n8n_origin\": true,\n    \"session_key_pattern\": \"{{ $('Set agent-sessionID').item.json['agent-sessionID'] }}\"\n  }\n}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1280,
+        304
+      ],
+      "id": "a0cae2f9-1b5f-4467-9d3b-57a1952c7ada",
+      "name": "model-builder"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3b1c4ebf-7038-468a-b17a-e4e9a47edf76",
+              "name": "request_json",
+              "value": "={\n  \"agent_id\": \"{{ $json.agent_id }}\",\n  \"template_id\": \"{{ $json.agent_id }}-v0.0.5\",\n  \"name\": \"{{ $json.agent_id }}\",\n  \"description\": \"Aggregates multiple explored architecture candidates, applies strict decision logic, and outputs a selected or constrained-synthesized blueprint for taxonomy construction.\",\n  \"model\": {\n    \"provider\": \"azure_openai\",\n    \"model_name\": \"{{ $json.model_name }}\",\n    \"temperature\": {{ $json.model_temp.toNumber() || 1.0 }},\n    \"streaming\": false\n  },\n  \"prompt\": {\n        \"system\": \"You are a Neural Network Architecture aggregator Agent (model-aggregator-agent). Your task has two modes: consolidate generated candidates or refine a provided candidate blueprint for downstream taxonomy construction.\\n\\nSEARCH_SPACE_SUMMARY is provided in the next system message. Candidate input is provided in the user message. Both are IMMUTABLE runtime context. No external knowledge or assumptions.\\n\\nYour role is DECISION AND CONSOLIDATION ONLY. You MUST NOT output a full nn_taxonomy model. You MUST NOT call validation tools.\\n\\nMode handling:\\n- mode = generate: evaluate explored candidates, rank them, and optionally synthesize a constrained hybrid.\\n- mode = refine: evaluate the provided refinement candidate together with orchestrator guidance and output one improved blueprint.\\n\\nStrict workflow:\\n1. Read mode and normalize candidate input against the same rubric.\\n2. Score evidence on design-space fit, architectural plausibility, taxonomy likelihood, and cost efficiency.\\n3. If mode=generate, select strongest candidate or constrained synthesis when compatibility is explicit.\\n4. If mode=refine, produce one constrained refinement of the provided candidate (selection_mode may still be selected or synthesized).\\n5. Output exactly one final blueprint plus scoring trace.\\n\\nIronclad rules:\\n- No external additions outside SEARCH_SPACE_SUMMARY.\\n- No unconstrained merging or arbitrary redesign in refine mode.\\n- If evidence is weak, still output the best available blueprint and record uncertainty.\\n- Treat user-provided candidate order as authoritative when multiple candidates are provided.\\n- JSON only.\\n\\nOutput format exactly:\\n{\\n  \\\"selected_candidate\\\": {\\n    \\\"selection_mode\\\": \\\"selected|synthesized\\\",\\n    \\\"source_candidate_ids\\\": [\\\"\\\"],\\n    \\\"model_family\\\": \\\"\\\",\\n    \\\"decision_rationale\\\": \\\"\\\",\\n    \\\"blueprint\\\": {\\n      \\\"backbone\\\": \\\"\\\",\\n      \\\"block_pattern\\\": [\\\"\\\"],\\n      \\\"connectivity\\\": \\\"\\\",\\n      \\\"normalization\\\": \\\"\\\",\\n      \\\"regularization\\\": \\\"\\\",\\n      \\\"required_spec_elements\\\": [\\\"\\\"],\\n      \\\"forbidden_or_avoided_elements\\\": [\\\"\\\"]\\n    },\\n    \\\"scores\\\": {\\n      \\\"design_space_fit\\\": 0,\\n      \\\"architectural_plausibility\\\": 0,\\n      \\\"taxonomy_likelihood\\\": 0,\\n      \\\"cost_efficiency\\\": 0,\\n      \\\"overall\\\": 0\\n    },\\n    \\\"uncertainty_notes\\\": [\\\"\\\"]\\n  }\\n}\",\n        \"system_context\": [\n        \"SEARCH_SPACE_SUMMARY (IMMUTABLE — COMPACT DESIGN SPACE VIEW):\\n {{ $('Edit Fields').item.json.model_spec_compact }}\"\n        ],\n        \"developer\": null\n    },\n  \"tools\": [],\n  \"memory\": {\n    \"backend\": \"postgres\",\n    \"thread_table\": \"n8n_chat_histories\",\n    \"max_history_messages\": 5\n  },\n  \"output_schema\": {\n    \"title\": \"ModelaggregatorOutputSchema\",\n    \"type\": \"object\",\n    \"required\": [\"selected_candidate\"],\n    \"additionalProperties\": false,\n    \"properties\": {\n      \"selected_candidate\": {\n        \"type\": \"object\",\n        \"required\": [\n          \"selection_mode\",\n          \"source_candidate_ids\",\n          \"model_family\",\n          \"decision_rationale\",\n          \"blueprint\",\n          \"scores\",\n          \"uncertainty_notes\"\n        ],\n        \"additionalProperties\": false,\n        \"properties\": {\n          \"selection_mode\": {\n            \"type\": \"string\",\n            \"enum\": [\"selected\", \"synthesized\"]\n          },\n          \"source_candidate_ids\": {\n            \"type\": \"array\",\n            \"items\": { \"type\": \"string\" }\n          },\n          \"model_family\": { \"type\": \"string\" },\n          \"decision_rationale\": { \"type\": \"string\" },\n          \"blueprint\": {\n            \"type\": \"object\",\n            \"required\": [\n              \"backbone\",\n              \"block_pattern\",\n              \"connectivity\",\n              \"normalization\",\n              \"regularization\",\n              \"required_spec_elements\",\n              \"forbidden_or_avoided_elements\"\n            ],\n            \"additionalProperties\": false,\n            \"properties\": {\n              \"backbone\": { \"type\": \"string\" },\n              \"block_pattern\": {\n                \"type\": \"array\",\n                \"items\": { \"type\": \"string\" }\n              },\n              \"connectivity\": { \"type\": \"string\" },\n              \"normalization\": { \"type\": \"string\" },\n              \"regularization\": { \"type\": \"string\" },\n              \"required_spec_elements\": {\n                \"type\": \"array\",\n                \"items\": { \"type\": \"string\" }\n              },\n              \"forbidden_or_avoided_elements\": {\n                \"type\": \"array\",\n                \"items\": { \"type\": \"string\" }\n              }\n            }\n          },\n          \"scores\": {\n            \"type\": \"object\",\n            \"required\": [\n              \"design_space_fit\",\n              \"architectural_plausibility\",\n              \"taxonomy_likelihood\",\n              \"cost_efficiency\",\n              \"overall\"\n            ],\n            \"additionalProperties\": false,\n            \"properties\": {\n              \"design_space_fit\": { \"type\": \"number\" },\n              \"architectural_plausibility\": { \"type\": \"number\" },\n              \"taxonomy_likelihood\": { \"type\": \"number\" },\n              \"cost_efficiency\": { \"type\": \"number\" },\n              \"overall\": { \"type\": \"number\" }\n            }\n          },\n          \"uncertainty_notes\": {\n            \"type\": \"array\",\n            \"items\": { \"type\": \"string\" }\n          }\n        }\n      }\n    }\n  },\n  \"metadata\": {\n    \"n8n_origin\": true,\n    \"session_key_pattern\": \"{{ $('Set agent-sessionID').item.json['agent-sessionID'] }}\"\n  }\n}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1280,
+        112
+      ],
+      "id": "e02250ae-26de-4d68-86c3-8ee42b30886f",
+      "name": "model-aggregator"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1056,
+        320
+      ],
+      "id": "6c6a3a49-1155-4ff9-bb79-78748174f1ae",
+      "name": "Aggregate"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Set agent-sessionID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Get agent templates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Agent": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set agent-sessionID": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get agent templates": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "model-explorer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "model-aggregator",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "model-builder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "model-explorer": {
+      "main": [
+        [
+          {
+            "node": "Create Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "model-builder": {
+      "main": [
+        [
+          {
+            "node": "Create Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "model-aggregator": {
+      "main": [
+        [
+          {
+            "node": "Create Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "chatInput": "Please generate a high performing model",
+          "sessionID": "test_agent_generator_mesh_v0.1",
+          "input_shape": "[1, 3, 32, 32]",
+          "output_activation": "Softmax",
+          "output_nodes": "10",
+          "model_spec_compact": "",
+          "model_spec_options": "{\"$defs\":{\"BatchNorm1dConfig\":{\"additionalProperties\":false,\"description\":\"Batch normalization 1D\",\"properties\":{\"name\":{\"description\":\"Unique layer name/identifier\",\"title\":\"Name\",\"type\":\"string\"},\"layer_type\":{\"const\":\"BatchNorm1d\",\"default\":\"BatchNorm1d\",\"title\":\"Layer Type\",\"type\":\"string\"},\"num_features\":{\"description\":\"Number of features\",\"exclusiveMinimum\":0,\"title\":\"Num Features\",\"type\":\"integer\"},\"eps\":{\"default\":0.00001,\"description\":\"Epsilon for numerical stability\",\"exclusiveMinimum\":0,\"title\":\"Eps\",\"type\":\"number\"},\"momentum\":{\"default\":0.1,\"description\":\"Momentum\",\"maximum\":1,\"minimum\":0,\"title\":\"Momentum\",\"type\":\"number\"},\"affine\":{\"default\":true,\"description\":\"Learn affine parameters\",\"title\":\"Affine\",\"type\":\"boolean\"}},\"required\":[\"name\",\"num_features\"],\"title\":\"BatchNorm1dConfig\",\"type\":\"object\"},\"BatchNorm2dConfig\":{\"additionalProperties\":false,\"description\":\"Batch normalization 2D\",\"properties\":{\"name\":{\"description\":\"Unique layer name/identifier\",\"title\":\"Name\",\"type\":\"string\"},\"layer_type\":{\"const\":\"BatchNorm2d\",\"default\":\"BatchNorm2d\",\"title\":\"Layer Type\",\"type\":\"string\"},\"num_features\":{\"description\":\"Number of features\",\"exclusiveMinimum\":0,\"title\":\"Num Features\",\"type\":\"integer\"},\"eps\":{\"default\":0.00001,\"description\":\"Epsilon for numerical stability\",\"exclusiveMinimum\":0,\"title\":\"Eps\",\"type\":\"number\"},\"momentum\":{\"default\":0.1,\"description\":\"Momentum\",\"maximum\":1,\"minimum\":0,\"title\":\"Momentum\",\"type\":\"number\"},\"affine\":{\"default\":true,\"description\":\"Learn affine parameters\",\"title\":\"Affine\",\"type\":\"boolean\"}},\"required\":[\"name\",\"num_features\"],\"title\":\"BatchNorm2dConfig\",\"type\":\"object\"},\"Conv1dConfig\":{\"additionalProperties\":false,\"description\":\"Convolutional 1D layer\",\"properties\":{\"name\":{\"description\":\"Unique layer name/identifier\",\"title\":\"Name\",\"type\":\"string\"},\"layer_type\":{\"const\":\"Conv1d\",\"default\":\"Conv1d\",\"title\":\"Layer Type\",\"type\":\"string\"},\"in_channels\":{\"description\":\"Input channels\",\"exclusiveMinimum\":0,\"title\":\"In Channels\",\"type\":\"integer\"},\"out_channels\":{\"description\":\"Output channels\",\"exclusiveMinimum\":0,\"title\":\"Out Channels\",\"type\":\"integer\"},\"kernel_size\":{\"description\":\"Kernel size\",\"exclusiveMinimum\":0,\"title\":\"Kernel Size\",\"type\":\"integer\"},\"stride\":{\"default\":1,\"description\":\"Stride\",\"exclusiveMinimum\":0,\"title\":\"Stride\",\"type\":\"integer\"},\"padding\":{\"default\":0,\"description\":\"Padding\",\"minimum\":0,\"title\":\"Padding\",\"type\":\"integer\"},\"dilation\":{\"default\":1,\"description\":\"Dilation\",\"exclusiveMinimum\":0,\"title\":\"Dilation\",\"type\":\"integer\"},\"groups\":{\"default\":1,\"description\":\"Number of groups\",\"exclusiveMinimum\":0,\"title\":\"Groups\",\"type\":\"integer\"},\"bias\":{\"default\":true,\"description\":\"Include bias\",\"title\":\"Bias\",\"type\":\"boolean\"}},\"required\":[\"name\",\"in_channels\",\"out_channels\",\"kernel_size\"],\"title\":\"Conv1dConfig\",\"type\":\"object\"},\"Conv2dConfig\":{\"additionalProperties\":false,\"description\":\"Convolutional 2D layer\",\"properties\":{\"name\":{\"description\":\"Unique layer name/identifier\",\"title\":\"Name\",\"type\":\"string\"},\"layer_type\":{\"const\":\"Conv2d\",\"default\":\"Conv2d\",\"title\":\"Layer Type\",\"type\":\"string\"},\"in_channels\":{\"anyOf\":[{\"minimum\":0,\"type\":\"integer\"},{\"const\":\"auto\",\"type\":\"string\"}],\"description\":\"Input channels (int) or 'auto' for automatic shape inference based on previous connected nodes\",\"title\":\"In Channels\"},\"out_channels\":{\"description\":\"Output channels\",\"exclusiveMinimum\":0,\"title\":\"Out Channels\",\"type\":\"integer\"},\"kernel_size\":{\"anyOf\":[{\"type\":\"integer\"},{\"maxItems\":2,\"minItems\":2,\"prefixItems\":[{\"type\":\"integer\"},{\"type\":\"integer\"}],\"type\":\"array\"}],\"description\":\"Kernel size (int or 2-tuple)\",\"title\":\"Kernel Size\"},\"stride\":{\"anyOf\":[{\"type\":\"integer\"},{\"maxItems\":2,\"minItems\":2,\"prefixItems\":[{\"type\":\"integer\"},{\"type\":\"integer\"}],\"type\":\"array\"}],\"default\":1,\"description\":\"Stride (int or 2-tuple)\",\"title\":\"Stride\"},\"padding\":{\"anyOf\":[{\"type\":\"integer\"},{\"maxItems\":2,\"minItems\":2,\"prefixItems\":[{\"type\":\"integer\"},{\"type\":\"integer\"}],\"type\":\"array\"}],\"default\":0,\"description\":\"Padding (int or 2-tuple)\",\"title\":\"Padding\"},\"dilation\":{\"anyOf\":[{\"type\":\"integer\"},{\"maxItems\":2,\"minItems\":2,\"prefixItems\":[{\"type\":\"integer\"},{\"type\":\"integer\"}],\"type\":\"array\"}],\"default\":1,\"description\":\"Dilation (int or 2-tuple)\",\"title\":\"Dilation\"},\"groups\":{\"default\":1,\"description\":\"Number of groups\",\"exclusiveMinimum\":0,\"title\":\"Groups\",\"type\":\"integer\"},\"bias\":{\"default\":true,\"description\":\"Include bias\",\"title\":\"Bias\",\"type\":\"boolean\"}},\"required\":[\"name\",\"in_channels\",\"out_channels\",\"kernel_size\"],\"title\":\"Conv2dConfig\",\"type\":\"object\"},\"ConvTranspose1dConfig\":{\"additionalProperties\":false,\"description\":\"Transposed convolutional 1D layer\",\"properties\":{\"name\":{\"description\":\"Unique layer name/identifier\",\"title\":\"Name\",\"type\":\"string\"},\"layer_type\":{\"const\":\"ConvTranspose1d\",\"default\":\"ConvTranspose1d\",\"title\":\"Layer Type\",\"type\":\"string\"},\"in_channels\":{\"description\":\"Input channels\",\"exclusiveMinimum\":0,\"title\":\"In Channels\",\"type\":\"integer\"},\"out_channels\":{\"description\":\"Output channels\",\"exclusiveMinimum\":0,\"title\":\"Out Channels\",\"type\":\"integer\"},\"kernel_size\":{\"description\":\"Kernel size\",\"exclusiveMinimum\":0,\"title\":\"Kernel Size\",\"type\":\"integer\"},\"stride\":{\"default\":1,\"description\":\"Stride\",\"exclusiveMinimum\":0,\"title\":\"Stride\",\"type\":\"integer\"},\"padding\":{\"default\":0,\"description\":\"Padding\",\"minimum\":0,\"title\":\"Padding\",\"type\":\"integer\"},\"output_padding\":{\"default\":0,\"description\":\"Output padding\",\"minimum\":0,\"title\":\"Output Padding\",\"type\":\"integer\"},\"dilation\":{\"default\":1,\"description\":\"Dilation\",\"exclusiveMinimum\":0,\"title\":\"Dilation\",\"type\":\"integer\"},\"groups\":{\"default\":1,\"description\":\"Number of groups\",\"exclusiveMinimum\":0,\"title\":\"Groups\",\"type\":\"integer\"},\"bias\":{\"default\":true,\"description\":\"Include bias\",\"title\":\"Bias\",\"type\":\"boolean\"}},\"required\":[\"name\",\"in_channels\",\"out_channels\",\"kernel_size\"],\"title\":\"ConvTranspose1dConfig\",\"type\":\"object\"},\"ConvTranspose2dConfig\":{\"additionalProperties\":false,\"description\":\"Transposed convolutional 2D layer\",\"properties\":{\"name\":{\"description\":\"Unique layer name/identifier\",\"title\":\"Name\",\"type\":\"string\"},\"layer_type\":{\"const\":\"ConvTranspose2d\",\"default\":\"ConvTranspose2d\",\"title\":\"Layer Type\",\"type\":\"string\"},\"in_channels\":{\"description\":\"Input channels\",\"exclusiveMinimum\":0,\"title\":\"In Channels\",\"type\":\"integer\"},\"out_channels\":{\"description\":\"Output channels\",\"exclusiveMinimum\":0,\"title\":\"Out Channels\",\"type\":\"integer\"},\"kernel_size\":{\"anyOf\":[{\"type\":\"integer\"},{\"maxItems\":2,\"minItems\":2,\"prefixItems\":[{\"type\":\"integer\"},{\"type\":\"integer\"}],\"type\":\"array\"}],\"description\":\"Kernel size (int or 2-tuple)\",\"title\":\"Kernel Size\"},\"stride\":{\"anyOf\":[{\"type\":\"integer\"},{\"maxItems\":2,\"minItems\":2,\"prefixItems\":[{\"type\":\"integer\"},{\"type\":\"integer\"}],\"type\":\"array\"}],\"default\":1,\"description\":\"Stride (int or 2-tuple)\",\"title\":\"Stride\"},\"padding\":{\"anyOf\":[{\"type\":\"integer\"},{\"maxItems\":2,\"minItems\":2,\"prefixItems\":[{\"type\":\"integer\"},{\"type\":\"integer\"}],\"type\":\"array\"}],\"default\":0,\"description\":\"Padding (int or 2-tuple)\",\"title\":\"Padding\"},\"output_padding\":{\"anyOf\":[{\"type\":\"integer\"},{\"maxItems\":2,\"minItems\":2,\"prefixItems\":[{\"type\":\"integer\"},{\"type\":\"integer\"}],\"type\":\"array\"}],\"default\":0,\"description\":\"Output padding (int or 2-tuple)\",\"title\":\"Output Padding\"},\"dilation\":{\"anyOf\":[{\"type\":\"integer\"},{\"maxItems\":2,\"minItems\":2,\"prefixItems\":[{\"type\":\"integer\"},{\"type\":\"integer\"}],\"type\":\"array\"}],\"default\":1,\"description\":\"Dilation (int or 2-tuple)\",\"title\":\"Dilation\"},\"groups\":{\"default\":1,\"description\":\"Number of groups\",\"exclusiveMinimum\":0,\"title\":\"Groups\",\"type\":\"integer\"},\"bias\":{\"default\":true,\"description\":\"Include bias\",\"title\":\"Bias\",\"type\":\"boolean\"}},\"required\":[\"name\",\"in_channels\",\"out_channels\",\"kernel_size\"],\"title\":\"ConvTranspose2dConfig\",\"type\":\"object\"},\"DropoutConfig\":{\"additionalProperties\":false,\"description\":\"Dropout layer\",\"properties\":{\"name\":{\"description\":\"Unique layer name/identifier\",\"title\":\"Name\",\"type\":\"string\"},\"layer_type\":{\"const\":\"Dropout\",\"default\":\"Dropout\",\"title\":\"Layer Type\",\"type\":\"string\"},\"p\":{\"default\":0.5,\"description\":\"Dropout probability\",\"maximum\":1,\"minimum\":0,\"title\":\"P\",\"type\":\"number\"},\"inplace\":{\"default\":false,\"description\":\"In-place operation\",\"title\":\"Inplace\",\"type\":\"boolean\"}},\"required\":[\"name\"],\"title\":\"DropoutConfig\",\"type\":\"object\"},\"EdgeConfig\":{\"additionalProperties\":false,\"description\":\"Connection between two nodes\",\"properties\":{\"source\":{\"description\":\"Source node ID\",\"title\":\"Source\",\"type\":\"string\"},\"target\":{\"description\":\"Target node ID\",\"title\":\"Target\",\"type\":\"string\"},\"edge_type\":{\"default\":\"sequential\",\"description\":\"Type of edge: 'sequential' (normal)\",\"enum\":[\"sequential\",\"skip\"],\"title\":\"Edge Type\",\"type\":\"string\"}},\"required\":[\"source\",\"target\"],\"title\":\"EdgeConfig\",\"type\":\"object\"},\"FlattenConfig\":{\"additionalProperties\":false,\"description\":\"Flatten layer\",\"properties\":{\"name\":{\"description\":\"Unique layer name/identifier\",\"title\":\"Name\",\"type\":\"string\"},\"layer_type\":{\"const\":\"Flatten\",\"default\":\"Flatten\",\"title\":\"Layer Type\",\"type\":\"string\"},\"start_dim\":{\"default\":1,\"description\":\"Start dimension for flattening\",\"minimum\":0,\"title\":\"Start Dim\",\"type\":\"integer\"},\"end_dim\":{\"default\":-1,\"description\":\"End dimension for flattening\",\"title\":\"End Dim\",\"type\":\"integer\"}},\"required\":[\"name\"],\"title\":\"FlattenConfig\",\"type\":\"object\"},\"LeakyReLUConfig\":{\"additionalProperties\":false,\"description\":\"Leaky ReLU activation\",\"properties\":{\"name\":{\"description\":\"Unique layer name/identifier\",\"title\":\"Name\",\"type\":\"string\"},\"layer_type\":{\"const\":\"LeakyReLU\",\"default\":\"LeakyReLU\",\"title\":\"Layer Type\",\"type\":\"string\"},\"negative_slope\":{\"default\":0.01,\"description\":\"Negative slope\",\"minimum\":0,\"title\":\"Negative Slope\",\"type\":\"number\"},\"inplace\":{\"default\":false,\"description\":\"In-place operation\",\"title\":\"Inplace\",\"type\":\"boolean\"}},\"required\":[\"name\"],\"title\":\"LeakyReLUConfig\",\"type\":\"object\"},\"LinearConfig\":{\"additionalProperties\":false,\"description\":\"Fully connected layer\",\"properties\":{\"name\":{\"description\":\"Unique layer name/identifier\",\"title\":\"Name\",\"type\":\"string\"},\"layer_type\":{\"const\":\"Linear\",\"default\":\"Linear\",\"title\":\"Layer Type\",\"type\":\"string\"},\"in_features\":{\"anyOf\":[{\"type\":\"integer\"},{\"const\":\"auto\",\"type\":\"string\"}],\"description\":\"Input features (int) or 'auto' for automatic shape inference based on previous connected nodes\",\"title\":\"In Features\"},\"out_features\":{\"description\":\"Output features\",\"exclusiveMinimum\":0,\"title\":\"Out Features\",\"type\":\"integer\"},\"bias\":{\"default\":true,\"description\":\"Include bias\",\"title\":\"Bias\",\"type\":\"boolean\"}},\"required\":[\"name\",\"in_features\",\"out_features\"],\"title\":\"LinearConfig\",\"type\":\"object\"},\"MaxPool1dConfig\":{\"additionalProperties\":false,\"description\":\"Max pooling 1D layer\",\"properties\":{\"name\":{\"description\":\"Unique layer name/identifier\",\"title\":\"Name\",\"type\":\"string\"},\"layer_type\":{\"const\":\"MaxPool1d\",\"default\":\"MaxPool1d\",\"title\":\"Layer Type\",\"type\":\"string\"},\"kernel_size\":{\"description\":\"Kernel size\",\"exclusiveMinimum\":0,\"title\":\"Kernel Size\",\"type\":\"integer\"},\"stride\":{\"default\":1,\"description\":\"Stride\",\"exclusiveMinimum\":0,\"title\":\"Stride\",\"type\":\"integer\"},\"padding\":{\"default\":0,\"description\":\"Padding\",\"minimum\":0,\"title\":\"Padding\",\"type\":\"integer\"},\"dilation\":{\"default\":1,\"description\":\"Dilation\",\"exclusiveMinimum\":0,\"title\":\"Dilation\",\"type\":\"integer\"}},\"required\":[\"name\",\"kernel_size\"],\"title\":\"MaxPool1dConfig\",\"type\":\"object\"},\"MaxPool2dConfig\":{\"additionalProperties\":false,\"description\":\"Max pooling 2D layer\",\"properties\":{\"name\":{\"description\":\"Unique layer name/identifier\",\"title\":\"Name\",\"type\":\"string\"},\"layer_type\":{\"const\":\"MaxPool2d\",\"default\":\"MaxPool2d\",\"title\":\"Layer Type\",\"type\":\"string\"},\"kernel_size\":{\"anyOf\":[{\"type\":\"integer\"},{\"maxItems\":2,\"minItems\":2,\"prefixItems\":[{\"type\":\"integer\"},{\"type\":\"integer\"}],\"type\":\"array\"}],\"description\":\"Kernel size (int or 2-tuple)\",\"title\":\"Kernel Size\"},\"stride\":{\"anyOf\":[{\"type\":\"integer\"},{\"maxItems\":2,\"minItems\":2,\"prefixItems\":[{\"type\":\"integer\"},{\"type\":\"integer\"}],\"type\":\"array\"},{\"type\":\"null\"}],\"default\":null,\"description\":\"Stride (defaults to kernel_size if None)\",\"title\":\"Stride\"},\"padding\":{\"anyOf\":[{\"type\":\"integer\"},{\"maxItems\":2,\"minItems\":2,\"prefixItems\":[{\"type\":\"integer\"},{\"type\":\"integer\"}],\"type\":\"array\"}],\"default\":0,\"description\":\"Padding (int or 2-tuple)\",\"title\":\"Padding\"},\"dilation\":{\"anyOf\":[{\"type\":\"integer\"},{\"maxItems\":2,\"minItems\":2,\"prefixItems\":[{\"type\":\"integer\"},{\"type\":\"integer\"}],\"type\":\"array\"}],\"default\":1,\"description\":\"Dilation (int or 2-tuple)\",\"title\":\"Dilation\"}},\"required\":[\"name\",\"kernel_size\"],\"title\":\"MaxPool2dConfig\",\"type\":\"object\"},\"NodeConfig\":{\"additionalProperties\":false,\"description\":\"A node in the computation graph (layer wrapper)\",\"properties\":{\"node_id\":{\"description\":\"Unique node ID\",\"title\":\"Node Id\",\"type\":\"string\"},\"layer\":{\"discriminator\":{\"mapping\":{\"BatchNorm1d\":\"#/$defs/BatchNorm1dConfig\",\"BatchNorm2d\":\"#/$defs/BatchNorm2dConfig\",\"Conv1d\":\"#/$defs/Conv1dConfig\",\"Conv2d\":\"#/$defs/Conv2dConfig\",\"ConvTranspose1d\":\"#/$defs/ConvTranspose1dConfig\",\"ConvTranspose2d\":\"#/$defs/ConvTranspose2dConfig\",\"Dropout\":\"#/$defs/DropoutConfig\",\"Flatten\":\"#/$defs/FlattenConfig\",\"LeakyReLU\":\"#/$defs/LeakyReLUConfig\",\"Linear\":\"#/$defs/LinearConfig\",\"MaxPool1d\":\"#/$defs/MaxPool1dConfig\",\"MaxPool2d\":\"#/$defs/MaxPool2dConfig\",\"ReLU\":\"#/$defs/ReLUConfig\",\"Softmax\":\"#/$defs/SoftmaxConfig\",\"Tanh\":\"#/$defs/TanhConfig\"},\"propertyName\":\"layer_type\"},\"oneOf\":[{\"$ref\":\"#/$defs/Conv1dConfig\"},{\"$ref\":\"#/$defs/Conv2dConfig\"},{\"$ref\":\"#/$defs/ConvTranspose1dConfig\"},{\"$ref\":\"#/$defs/ConvTranspose2dConfig\"},{\"$ref\":\"#/$defs/MaxPool1dConfig\"},{\"$ref\":\"#/$defs/MaxPool2dConfig\"},{\"$ref\":\"#/$defs/BatchNorm1dConfig\"},{\"$ref\":\"#/$defs/BatchNorm2dConfig\"},{\"$ref\":\"#/$defs/LinearConfig\"},{\"$ref\":\"#/$defs/DropoutConfig\"},{\"$ref\":\"#/$defs/FlattenConfig\"},{\"$ref\":\"#/$defs/ReLUConfig\"},{\"$ref\":\"#/$defs/LeakyReLUConfig\"},{\"$ref\":\"#/$defs/TanhConfig\"},{\"$ref\":\"#/$defs/SoftmaxConfig\"}],\"title\":\"Layer\"}},\"required\":[\"node_id\",\"layer\"],\"title\":\"NodeConfig\",\"type\":\"object\"},\"ReLUConfig\":{\"additionalProperties\":false,\"description\":\"ReLU activation\",\"properties\":{\"name\":{\"description\":\"Unique layer name/identifier\",\"title\":\"Name\",\"type\":\"string\"},\"layer_type\":{\"const\":\"ReLU\",\"default\":\"ReLU\",\"title\":\"Layer Type\",\"type\":\"string\"},\"inplace\":{\"default\":false,\"description\":\"In-place operation\",\"title\":\"Inplace\",\"type\":\"boolean\"}},\"required\":[\"name\"],\"title\":\"ReLUConfig\",\"type\":\"object\"},\"SoftmaxConfig\":{\"additionalProperties\":false,\"description\":\"Softmax activation\",\"properties\":{\"name\":{\"description\":\"Unique layer name/identifier\",\"title\":\"Name\",\"type\":\"string\"},\"layer_type\":{\"const\":\"Softmax\",\"default\":\"Softmax\",\"title\":\"Layer Type\",\"type\":\"string\"},\"dim\":{\"default\":1,\"description\":\"Dimension along which to apply softmax\",\"title\":\"Dim\",\"type\":\"integer\"}},\"required\":[\"name\"],\"title\":\"SoftmaxConfig\",\"type\":\"object\"},\"TanhConfig\":{\"additionalProperties\":false,\"description\":\"Tanh activation\",\"properties\":{\"name\":{\"description\":\"Unique layer name/identifier\",\"title\":\"Name\",\"type\":\"string\"},\"layer_type\":{\"const\":\"Tanh\",\"default\":\"Tanh\",\"title\":\"Layer Type\",\"type\":\"string\"}},\"required\":[\"name\"],\"title\":\"TanhConfig\",\"type\":\"object\"}},\"additionalProperties\":false,\"description\":\"Complete neural network architecture specification\",\"properties\":{\"input_shape\":{\"description\":\"Input shape as tuple: (batch_size, channels, *spatial_dims)\",\"items\":{\"type\":\"integer\"},\"title\":\"Input Shape\",\"type\":\"array\"},\"nodes\":{\"additionalProperties\":{\"$ref\":\"#/$defs/NodeConfig\"},\"description\":\"List of nodes (layers) in the network\",\"title\":\"Nodes\",\"type\":\"object\"},\"edges\":{\"description\":\"Mandatory list of connections between nodes. Every node must have at least one connection. Multiple incoming connections are allowed and will be mergec with concat\",\"items\":{\"$ref\":\"#/$defs/EdgeConfig\"},\"title\":\"Edges\",\"type\":\"array\"},\"entry_node_id\":{\"description\":\"ID of the entry/input node. The input node shall consume the input tensor directly\",\"title\":\"Entry Node Id\",\"type\":\"string\"},\"exit_node_id\":{\"description\":\"ID of the exit/output node\",\"title\":\"Exit Node Id\",\"type\":\"string\"}},\"required\":[\"input_shape\",\"nodes\",\"entry_node_id\",\"exit_node_id\"],\"title\":\"ArchitectureSpec\",\"type\":\"object\"}",
+          "blank_model": "{\"input_shape\":[1,3,32,32],\"entry_node_id\":\"To be created\",\"exit_node_id\":\"output_activation\",\"nodes\":{\"output_linear\":{\"node_id\":\"output_linear\",\"layer\":{\"name\":\"output_linear\",\"layer_type\":\"Linear\",\"in_features\":\"auto\",\"out_features\":10}},\"output_activation\":{\"node_id\":\"output_activation\",\"layer\":{\"name\":\"output_activation\",\"layer_type\":\"Softmax\",\"dim\":1}}},\"edges\":[{\"source\":\"output_linear\",\"target\":\"output_activation\",\"edge_type\":\"sequential\"}]}"
+        }
+      }
+    ]
+  },
+  "versionId": "7c17e0e8-6323-4cee-adca-9021d748526b",
+  "activeVersionId": "7c17e0e8-6323-4cee-adca-9021d748526b",
+  "versionCounter": 285,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-04-15T07:16:41.805Z",
+      "createdAt": "2026-04-15T07:16:41.805Z",
+      "role": "workflow:owner",
+      "workflowId": "cOtne5iZCpOkDp6E",
+      "projectId": "EqTnf87AG5HyB5dF",
+      "project": {
+        "updatedAt": "2026-03-14T17:21:54.570Z",
+        "createdAt": "2026-03-14T17:05:46.633Z",
+        "id": "EqTnf87AG5HyB5dF",
+        "name": "Luca Lakenbrink <luca.lakenbrink@fom-net.de>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "cd08fa2f-3e6c-4bf5-8905-bbf2d09f907c"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": "Version 7c17e0e8",
+    "description": ""
+  }
+}

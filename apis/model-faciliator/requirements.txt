@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+numpy
+torch
+toonify>=1.6.0
+--index-url=https://download.pytorch.org/whl/cpu --extra-index-url=https://pypi.org/simple

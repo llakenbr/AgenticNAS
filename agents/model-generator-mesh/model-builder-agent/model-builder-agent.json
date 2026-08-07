@@ -1,0 +1,135 @@
+{
+  "agent_id": "{{ $json.agent_id }}",
+  "template_id": "{{ $json.agent_id }}-v0.0.12",
+  "name": "{{ $json.agent_id }}",
+  "description": "Constructs and validates a full nn-taxonomy neural network architecture from the selected architecture blueprint using nn_core via the model-facilitator API.",
+  "model": {
+    "provider": "azure_openai",
+    "model_name": "{{ $json.model_name }}",
+    "temperature": {{ $json.model_temp.toNumber() || 1.0 }},
+    "streaming": false
+  },
+  "prompt": {
+    "system": "You are a Neural Network Taxonomy Construction Agent (model-taxonomy-builder-agent). VIOLATION OF ANY RULE BELOW INVALIDATES ALL OUTPUTS-DISCARD AND RESTART.\n\nARCHITECTURE_SPEC is provided in the next system message. BLANK_MODEL_TEMPLATE is provided in the message after that. SELECTED_BLUEPRINT is provided in the user message. All are IMMUTABLE runtime context.\n\nARCHITECTURE_SPEC OVERRIDES ALL CONFLICTS. If SELECTED_BLUEPRINT conflicts with ARCHITECTURE_SPEC, obey ARCHITECTURE_SPEC. No external knowledge or assumptions.\n\nMandatory Tool: ALWAYS call 'validate_model_architecture' after each build. LOOP UNTIL {\"valid\": true}. Never skip, never assume validity, never output unvalidated models. You must invoke the tool in this agent and repair any errors yourself before continuing.\n\nTool-call contract for validate_model_architecture:\n- Call the tool with exactly one argument object key named \"body\".\n- The \"body\" value must be the complete architecture object to validate.\n- Do not wrap the payload in any other keys. Do not send prose, markdown, or explanation text in the tool call.\n- Exact shape required: {\"body\": {\"input_shape\": [...], \"entry_node_id\": \"...\", \"exit_node_id\": \"...\", \"nodes\": {...}, \"edges\": [...]}}\n\nStrict workflow:\n1. Build candidate: Fill ONLY BLANK_MODEL_TEMPLATE slots using EXCLUSIVELY ARCHITECTURE_SPEC and SELECTED_BLUEPRINT elements.\n2. Construct a complete nn_taxonomy architecture with exact shape compatibility from input to output.\n3. Ensure nn_taxonomy structure matches ArchitectureSpec exactly: input_shape (array), nodes (object map keyed by node_id), edges (array), entry_node_id (string), exit_node_id (string).\n4. For nodes: NEVER output a string and NEVER output an array. Each map value must be a NodeConfig object with {\"node_id\": string, \"layer\": object}.\n5. Call 'validate_model_architecture' using the exact tool-call contract above.\n6. If the tool returns any HTTP status other than 200: treat the architecture as invalid, parse the error payload (including detail/errors), fix the issues in this agent, then repeat.\n7. If {\"valid\": false} OR a non-200 response includes a detail.errors list: treat every listed error as mandatory. Fix all listed issues in this agent before the next validation call.\n8. If {\"valid\": true} and HTTP status is 200: use that validated spec as nn_taxonomy without manual rewriting.\n9. TERMINATE AND OUTPUT ONLY AFTER {\"valid\": true} with HTTP 200.\n\nCompletion rule:\n- Never return an empty or partial taxonomy when a valid one can be formed.\n- If uncertain, emit the simplest valid taxonomy implied by BLANK_MODEL_TEMPLATE, preserving all fixed template nodes and edges and adding only the allowed intermediate nodes from ARCHITECTURE_SPEC.\n- Never omit nodes or edges from the final nn_taxonomy.\n\nIronclad rules:\n- Params, layers, classes, sizes, and connections must come from ARCHITECTURE_SPEC only, guided by SELECTED_BLUEPRINT.\n- Shapes must match exactly from input through intermediates to output.\n- Fixed input and output template parts are immutable and must not be changed.\n- nn_taxonomy.edges must be an array containing only edge objects. Do not place extra_meta, model_name, strings, or any other keys/items inside edges.\n- Never emit edge_type as null.\n- For normal connections, omit edge_type (sequential is implicit).\n- Use edge_type only when explicitly set to \"skip\".\n- Output must be strict JSON: no comments, no trailing commas, no markdown, no code fences.\n- Forbidden: adding unsupported elements, skipping validation, partial validation, deferring fixes, prose, markdown, explanations, output before valid:true, or proceeding after any non-200 validation response.\n\nOutput Format exactly:\n{\n  \"nn_taxonomy\": {\n    \"input_shape\": [1, 3, 32, 32],\n    \"entry_node_id\": \"node_in\",\n    \"exit_node_id\": \"node_out\",\n    \"nodes\": {},\n    \"edges\": [\n      { \"source\": \"node_in\", \"target\": \"node_out\" }\n    ]\n  },\n  \"model_name\": \"\",\n  \"extra_meta\": {\n    \"selection_mode\": \"selected\",\n    \"builder_notes\": \"\"\n  }\n}\n\nPre-output self-check (mandatory):\n- Top-level keys exactly: nn_taxonomy, model_name, extra_meta.\n- extra_meta is top-level, not nested in nn_taxonomy or edges.\n- nn_taxonomy.edges is a JSON array of objects only.\n- nn_taxonomy.nodes must contain at least the template nodes required to complete a valid graph.\n\nFailure handling: prioritize valid nn_taxonomy. Use empty strings only where necessary, but never omit required fields.",
+    "system_context": [
+      "ARCHITECTURE_SPEC (IMMUTABLE — EXCLUSIVE DESIGN SPACE):\n {{ $('Edit Fields').item.json.model_spec_options }}",
+      "BLANK_MODEL_TEMPLATE (IMMUTABLE — complete intermediate slots only, never modify fixed input/output layers):\n {{ $('Edit Fields').item.json.blank_model }}"
+    ],
+    "developer": null
+  },
+  "tools": [
+    {
+      "name": "validate_model_architecture",
+      "type": "http",
+      "config": {
+        "url": "http://model-faciliator:7002/validate",
+        "method": "POST",
+        "description": "Validates a neural network architecture specification against the nn_core ArchitectureSpec schema. Call this tool after constructing or modifying an architecture spec. Pass the complete architecture as the body field. Returns a success response with the parsed spec if valid, or a detailed error describing what is wrong. Only retry when the tool output is retryable=true; if retryable=false or the response is a transport/server failure, stop and surface the error instead of looping.",
+        "timeout_seconds": 30,
+        "auth": { "type": "none" },
+        "headers": {},
+        "params": [
+          {
+            "name": "body",
+            "type": "object",
+            "required": true,
+            "description": "The complete neural network architecture specification. Exact call shape: {\"body\": {\"input_shape\": [...], \"entry_node_id\": \"...\", \"exit_node_id\": \"...\", \"nodes\": {...}, \"edges\": [...]}}"
+          }
+        ]
+      }
+    }
+  ],
+  "memory": {
+    "backend": "postgres",
+    "thread_table": "n8n_chat_histories",
+    "max_history_messages": 5
+  },
+  "output_schema": {
+    "title": "AgentOutputSchema",
+    "type": "object",
+    "required": ["nn_taxonomy", "model_name", "extra_meta"],
+    "additionalProperties": false,
+    "properties": {
+      "nn_taxonomy": {
+        "type": "object",
+        "description": "Fully validated model JSON; stored as JSONB in nn_taxonomy.",
+        "additionalProperties": false,
+        "properties": {
+          "input_shape": {
+            "type": "array",
+            "description": "Input tensor shape [B,C,H,W]",
+            "items": { "type": "integer" },
+            "minItems": 3
+          },
+          "entry_node_id": { "type": "string", "description": "ID of the first node" },
+          "exit_node_id": { "type": "string", "description": "ID of the last node" },
+          "nodes": {
+            "type": "object",
+            "description": "Map of node_id -> NodeConfig objects (NOT a string, NOT an array)",
+            "minProperties": 1,
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "node_id": { "type": "string" },
+                "layer": {
+                  "type": "object",
+                  "description": "Layer configuration object; must match ARCHITECTURE_SPEC for the selected layer_type",
+                  "properties": {
+                    "layer_type": { "type": "string" },
+                    "name": { "type": "string" }
+                  },
+                  "required": ["layer_type", "name"],
+                  "additionalProperties": true
+                }
+              },
+              "required": ["node_id", "layer"]
+            }
+          },
+          "edges": {
+            "type": "array",
+            "description": "List of edge objects",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "properties": {
+                "source": { "type": "string" },
+                "target": { "type": "string" },
+                "edge_type": { "type": "string", "enum": ["sequential", "skip"], "default": "sequential" }
+              },
+              "required": ["source", "target"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["input_shape", "entry_node_id", "exit_node_id", "nodes", "edges"]
+      },
+      "model_name": {
+        "type": "string",
+        "description": "Human-readable model name e.g. ConvNet_3x32x32_v1"
+      },
+      "extra_meta": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["selection_mode", "builder_notes"],
+        "properties": {
+          "source_candidate_ids": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "selection_mode": {
+            "type": "string",
+            "enum": ["selected", "synthesized"]
+          },
+          "builder_notes": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "metadata": {
+    "n8n_origin": true,
+    "session_key_pattern": "{{ $('Set agent-sessionID').item.json['agent-sessionID'] }}"
+  }
+}

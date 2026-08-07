@@ -1,0 +1,85 @@
+{
+  "updatedAt": "2026-04-07T08:41:36.638Z",
+  "createdAt": "2026-04-07T08:31:26.963Z",
+  "id": "kqH7gENXt9SFmLj6",
+  "name": "My workflow",
+  "description": null,
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ef6e7240-4405-436e-a54b-80ee718d8c0e",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "6f59d7b6-4a84-4c6d-8526-d4d3bc6630e6",
+      "name": "AI Agent"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "4d193e92-e40a-4aa7-a8e8-4bc0d690b82e",
+  "activeVersionId": null,
+  "versionCounter": 9,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-04-07T08:31:26.963Z",
+      "createdAt": "2026-04-07T08:31:26.963Z",
+      "role": "workflow:owner",
+      "workflowId": "kqH7gENXt9SFmLj6",
+      "projectId": "EqTnf87AG5HyB5dF",
+      "project": {
+        "updatedAt": "2026-03-14T17:21:54.570Z",
+        "createdAt": "2026-03-14T17:05:46.633Z",
+        "id": "EqTnf87AG5HyB5dF",
+        "name": "Luca Lakenbrink <luca.lakenbrink@fom-net.de>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "cd08fa2f-3e6c-4bf5-8905-bbf2d09f907c"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

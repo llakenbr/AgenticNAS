@@ -1,0 +1,11 @@
+MODEL:
+{{ $('Edit Fields').item.json['input-model-spec'] }}
+
+ZERO-COST RESULTS:
+{{ $json['zero-cost-res'] }}
+
+Constraints:
+- Output only in defined TOON Output format
+- Use metric codes
+- Keep all fields concise
+- No additional explanations outside TOON tokens

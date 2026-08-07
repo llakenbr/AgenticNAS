@@ -1,0 +1,255 @@
+{
+  "updatedAt": "2026-04-20T12:00:09.491Z",
+  "createdAt": "2026-04-20T09:08:50.735Z",
+  "id": "D7BjYcHmnsBJSKig",
+  "name": "Test merge node",
+  "description": null,
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        176
+      ],
+      "id": "fe932469-e719-475d-8bf5-0107fab7b123",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        704,
+        32
+      ],
+      "id": "8e8563a1-b3eb-41d2-b547-650ff8829d3e",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1056,
+        16
+      ],
+      "id": "bf87fbc5-95e2-4ce8-9664-2ae7006f110c",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7bd4d72c-2ea2-44a4-aa4e-808062787a7c",
+              "name": "ctx",
+              "value": "{\"test\": \"test\"}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        -16
+      ],
+      "id": "f6ecf184-b16d-4d9f-8a6d-c0982f9d3df2",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        432,
+        272
+      ],
+      "id": "d887fbca-f7e1-4b04-a813-8b9b723d93dd",
+      "name": "items array"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7bd4d72c-2ea2-44a4-aa4e-808062787a7c",
+              "name": "output",
+              "value": "{\"test_output\": \"1\"}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        176
+      ],
+      "id": "1fa3db33-fd5a-419a-88f9-ed958ac10d3f",
+      "name": "Ouput 1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7bd4d72c-2ea2-44a4-aa4e-808062787a7c",
+              "name": "output",
+              "value": "{\"test_output\": \"1\"}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        368
+      ],
+      "id": "d38af3c1-e9db-4735-a725-42a6c5021db6",
+      "name": "Ouput "
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Ouput 1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Ouput ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ouput 1": {
+      "main": [
+        [
+          {
+            "node": "items array",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ouput ": {
+      "main": [
+        [
+          {
+            "node": "items array",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "items array": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "87231450-d6cd-4008-906a-4c2a94dd2b31",
+  "activeVersionId": null,
+  "versionCounter": 65,
+  "triggerCount": 0,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-04-20T09:08:50.735Z",
+      "createdAt": "2026-04-20T09:08:50.735Z",
+      "role": "workflow:owner",
+      "workflowId": "D7BjYcHmnsBJSKig",
+      "projectId": "EqTnf87AG5HyB5dF",
+      "project": {
+        "updatedAt": "2026-03-14T17:21:54.570Z",
+        "createdAt": "2026-03-14T17:05:46.633Z",
+        "id": "EqTnf87AG5HyB5dF",
+        "name": "Luca Lakenbrink <luca.lakenbrink@fom-net.de>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "cd08fa2f-3e6c-4bf5-8905-bbf2d09f907c"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}
