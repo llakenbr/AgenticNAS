@@ -1,6 +1,7 @@
-[submodule "nn-core-taxonomy"]
+[submodule "AgenticNAS-nn-taxonomy"]
 	path = nn-core-taxonomy
-	url = https://github.com/llakenbr/nn-core-taxonomy
-[submodule "apis/performance-predictor/zero-cost-predictor/zero-cost-nas"]
+	url = https://github.com/llakenbr/AgenticNAS-nn-taxonomy
+
+[submodule "zero-cost-nas"]
 	path = apis/performance-predictor/zero-cost-predictor/zero-cost-nas
-	url = https://github.com/llakenbr/zero-cost-nas
+	url = https://github.com/mohsaied/zero-cost-nas
