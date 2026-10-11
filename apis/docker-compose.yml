@@ -140,28 +140,6 @@ services:
     depends_on:
       - postgres
 
-  model-trainer:
-    build:
-      context: ../
-      dockerfile: ./apis/model-trainer/dockerfile
-    container_name: model-trainer
-    networks:
-      - automl-mesh
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
-    environment:
-      LOG_LEVEL: INFO
-    volumes:
-      - C:\Users\linki\Documents\AutoML\logs\model-trainer:/app/logs
-      - C:\Users\linki\Documents\AutoML\datasets:/app/_dataset
-    ports:
-      - "7007:7007"
-
 secrets:
   postgres_agent_runtime_password:
     file: ./secrets/postgres_agent_runtime_password.txt
