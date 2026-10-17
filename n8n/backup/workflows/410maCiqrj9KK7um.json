@@ -1,0 +1,66 @@
+{
+  "updatedAt": "2026-04-16T17:45:19.178Z",
+  "createdAt": "2026-04-16T17:43:53.587Z",
+  "id": "410maCiqrj9KK7um",
+  "name": "My workflow 2",
+  "description": null,
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "responseMode": "responseNodes"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "5fb5bd7b-e8c7-4070-a81a-c7ddc4dc71d6",
+      "name": "When chat message received",
+      "webhookId": "e433874d-421a-4c65-a0b9-c40a4c135c1e"
+    }
+  ],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "a42c84da-c2ef-420c-a37e-2ea4e419734a",
+  "activeVersionId": null,
+  "versionCounter": 6,
+  "triggerCount": 0,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-04-16T17:43:53.587Z",
+      "createdAt": "2026-04-16T17:43:53.587Z",
+      "role": "workflow:owner",
+      "workflowId": "410maCiqrj9KK7um",
+      "projectId": "EqTnf87AG5HyB5dF",
+      "project": {
+        "updatedAt": "2026-10-17T08:56:55.544Z",
+        "createdAt": "2026-03-14T17:05:46.633Z",
+        "id": "EqTnf87AG5HyB5dF",
+        "name": "Luca Lakenbrink <l.lakenbrink@icloud.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "cd08fa2f-3e6c-4bf5-8905-bbf2d09f907c"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

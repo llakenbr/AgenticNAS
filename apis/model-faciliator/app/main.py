@@ -1,10 +1,16 @@
+import logging
+
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.encoders import jsonable_encoder
+from contextlib import asynccontextmanager
 
 import json
 
 import toon
+
+from core.settings import settings
+from core.logging import configure_logging
 
 import nn_core
 from nn_core import ArchitectureSpec
@@ -84,10 +90,24 @@ async def get_spec_options():
     options = nn_core.get_llm_schema()
     return JSONResponse(content=jsonable_encoder(options))
 
+
 @app.get("/get_spec_options_toon", response_class=PlainTextResponse)
 async def get_spec_options_toon():
     options = toon.encode(nn_core.get_llm_schema())
     return options
+
+
+@app.get("/get_spec_options_compact")
+async def get_spec_options_compact():
+    options = nn_core.get_llm_schema_compact()
+    return JSONResponse(content=jsonable_encoder(options))
+
+
+@app.get("/get_spec_options_compact_toon", response_class=PlainTextResponse)
+async def get_spec_options_compact_toon():
+    options = nn_core.get_llm_schema_compact_toon()
+    return options
+
 
 @app.get("/get_json_schema", response_model=None)
 async def get_json_schema():
@@ -100,17 +120,27 @@ async def get_json_schema():
         media_type="application/schema+json"
     )
 
+
 @app.post("/validate")
 async def validate(request: Request):
     try:
-        request = await request.json()
-        if "spec" in request:
-            spec = request.get("spec", {})
-        else:
-            spec = request
+        body = await request.json()
+        spec = body.get("spec", body) if "spec" in body else body
 
-        print("INFO: Received validation request for spec: ", spec)
+        # Defensive: unwrap double-serialized spec
+        if isinstance(spec, str):
+            try:
+                spec = json.loads(spec)
+            except json.JSONDecodeError as e:
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"spec is a string but not valid JSON: {e}"
+                )
 
+        logger.info("Received validation request")
+        logger.debug("Spec: %s", spec)
+
+        # Schema validation
         res = nn_core.validate_dict(spec)
         logger.info("Schema validation passed")
 
@@ -130,6 +160,9 @@ async def validate(request: Request):
         logger.info("Forward pass validation passed")
 
         return JSONResponse(content=jsonable_encoder(res))
+
+    except HTTPException:
+        raise  # let FastAPI handle it directly, never re-wrap
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -138,6 +171,7 @@ async def validate(request: Request):
 async def validate_toon(toon_spec: str):
     res = nn_core.validate_architecture_toon(toon_spec)
     return res
+
 
 @app.post("/create_base_spec")
 async def create_init_model_spec(request: Request):

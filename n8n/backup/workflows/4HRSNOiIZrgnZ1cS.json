@@ -1,0 +1,122 @@
+{
+  "updatedAt": "2026-05-30T07:11:20.341Z",
+  "createdAt": "2026-05-30T07:10:03.347Z",
+  "id": "4HRSNOiIZrgnZ1cS",
+  "name": "My workflow 3",
+  "description": null,
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "110ff15e-2855-4a2b-960b-8aab8be1fe87",
+      "name": "When chat message received",
+      "webhookId": "01c0a470-dc7b-4407-9e7e-9998201263fc"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "f4a9b089-b436-4578-896e-402247b77ac1",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "gpt-5-mini",
+        "options": {
+          "maxRetries": 3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        208,
+        224
+      ],
+      "id": "1081819a-721c-47b6-b154-b196b7ce5448",
+      "name": "Azure gpt-5-mini",
+      "credentials": {
+        "azureOpenAiApi": {
+          "id": "vuyHHFR79qfaFdDD",
+          "name": "Azure Open AI account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Azure gpt-5-mini": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "ee51d8b1-8992-4033-9b4b-7b05a2270264",
+  "activeVersionId": null,
+  "versionCounter": 6,
+  "triggerCount": 0,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-05-30T07:10:03.347Z",
+      "createdAt": "2026-05-30T07:10:03.347Z",
+      "role": "workflow:owner",
+      "workflowId": "4HRSNOiIZrgnZ1cS",
+      "projectId": "EqTnf87AG5HyB5dF",
+      "project": {
+        "updatedAt": "2026-10-17T08:56:55.544Z",
+        "createdAt": "2026-03-14T17:05:46.633Z",
+        "id": "EqTnf87AG5HyB5dF",
+        "name": "Luca Lakenbrink <l.lakenbrink@icloud.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "cd08fa2f-3e6c-4bf5-8905-bbf2d09f907c"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

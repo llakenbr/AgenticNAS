@@ -32,6 +32,20 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
   GRANT CREATE ON SCHEMA public TO ${POSTGRES_NON_ROOT_USER};
 EOSQL
 
+# ─── n8n history DB: restore data backup when available ──────────────────────
+N8N_DATA_BACKUP="/backup/database/n8n-data-tables.dump"
+if [ -f "$N8N_DATA_BACKUP" ]; then
+  echo "SETUP INFO: restoring n8n data backup from ${N8N_DATA_BACKUP}..."
+  pg_restore \
+    --exit-on-error \
+    --no-owner \
+    --username "$POSTGRES_USER" \
+    --dbname "$POSTGRES_DB" \
+    "$N8N_DATA_BACKUP"
+else
+  echo "SETUP INFO: no n8n data backup found at ${N8N_DATA_BACKUP}; skipping restore."
+fi
+
 # ─── Model repository: DB + user ─────────────────────────────────────────────
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname postgres <<-EOSQL
   CREATE DATABASE ${MODEL_DB_NAME};
@@ -58,6 +72,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$MODEL_DB_NAME" <<
   CREATE TABLE model_benchmarks (
     id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     model_id        UUID NOT NULL REFERENCES models(id) ON DELETE CASCADE,
+    session_id      TEXT,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     benchmark_name  TEXT NOT NULL,
     dataset         TEXT,

@@ -38,6 +38,7 @@ services:
               capabilities: [gpu]
     environment:
       LOG_LEVEL: INFO
+      LOG_DIR: /app/logs
     volumes:
       - ${LOG_HOST_DIR:-../logs}/performance-predictor:/app/logs
       - ${DATASET_HOST_DIR:-../datasets}:/app/_dataset
@@ -126,7 +127,7 @@ services:
       POSTGRES_USER: agent_runtime_user
       POSTGRES_PASSWORD_FILE: /run/secrets/postgres_agent_runtime_password
 
-      AZURE_OPENAI_API_VERSION: 2024-12-01-preview
+      AZURE_OPENAI_API_VERSION: 2025-03-01-preview
       AZURE_OPENAI_API_KEY_FILE: /run/secrets/azure_api_key
       AZURE_OPENAI_API_ENDPOINT_FILE: /run/secrets/azure_api_endpoint
     ports:
@@ -137,6 +138,37 @@ services:
       - postgres_agent_runtime_password
       - azure_api_key
       - azure_api_endpoint
+    depends_on:
+      - postgres
+
+  agent-memory:
+    build:
+      context: ../
+      dockerfile: ./apis/agent-memory/dockerfile
+    container_name: agent-memory
+    restart: unless-stopped
+    networks:
+      - automl-mesh
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+    environment:
+      LOG_LEVEL: INFO
+      LOG_DIR: /app/logs
+
+      POSTGRES_HOST: n8n_postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: agent_memory
+      POSTGRES_USER: agent_memory_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_agent_memory_password
+    ports:
+      - "7011:7011"
+    volumes:
+      - ${LOG_HOST_DIR:-../logs}/agent-memory:/app/logs
+    secrets:
+      - postgres_agent_memory_password
     depends_on:
       - postgres
 

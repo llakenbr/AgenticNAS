@@ -1,5 +1,0 @@
-Conv2d: torch.nn.Conv2d
-ReLU: torch.nn.ReLU
-MaxPool2d: torch.nn.MaxPool2d
-Flatten: torch.nn.Flatten
-Linear: torch.nn.Linear

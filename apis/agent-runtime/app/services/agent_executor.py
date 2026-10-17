@@ -260,8 +260,8 @@ def invoke_agent(
     json_input: dict[str, Any] | list[dict[str, Any]] | None = None,
 ) -> RunResponse:
     logger.info(
-        "Run started — agent: '%s' session: '%s' message_len: %d",
-        agent.agent_id, session_id, len(message),
+        "Run started — agent: '%s' session: '%s' message_len: %d, json_input_len: %s",
+        agent.agent_id, session_id, len(message), len(str(json_input)) if json_input is not None else "NONE"
     )
 
     template = AgentTemplateCreate.model_validate(agent.agent_config)
@@ -298,7 +298,9 @@ def invoke_agent(
             session_id,
             exc,
         )
-        raise
+        raise RuntimeError(
+            f"Agent execution failed during graph invoke: {exc}"
+        ) from exc
 
     # Extract raw AIMessage text from graph result
     raw_text = ""
@@ -310,22 +312,25 @@ def invoke_agent(
         "total_tokens": 0,
     }
 
-    for msg in result.get("messages", []):
+    messages = result.get("messages", [])
+
+    # Count only messages created after the latest HumanMessage of this run.
+    # With checkpointer-backed threads, result["messages"] may include prior turns.
+    start_idx = 0
+    for i in range(len(messages) - 1, -1, -1):
+        msg = messages[i]
+        if msg.__class__.__name__ == "HumanMessage" and getattr(msg, "content", None) == chat_message:
+            start_idx = i + 1
+            break
+
+    for msg in messages[start_idx:]:
         cls = msg.__class__.__name__
         if cls == "AIMessage":
             raw_text = msg.content if isinstance(msg.content, str) else json.dumps(msg.content)
-
-            usage = getattr(msg, "usage_metadata", None) or {}
-            if usage:
-                token_usage["input_tokens"] += int(usage.get("input_tokens", 0) or 0)
-                token_usage["output_tokens"] += int(usage.get("output_tokens", 0) or 0)
-                token_usage["total_tokens"] += int(usage.get("total_tokens", 0) or 0)
-            else:
-                response_meta = getattr(msg, "response_metadata", {}) or {}
-                provider_usage = response_meta.get("token_usage", {}) or {}
-                token_usage["input_tokens"] += int(provider_usage.get("prompt_tokens", 0) or 0)
-                token_usage["output_tokens"] += int(provider_usage.get("completion_tokens", 0) or 0)
-                token_usage["total_tokens"] += int(provider_usage.get("total_tokens", 0) or 0)
+            msg_usage = _extract_usage_from_message(msg)
+            token_usage["input_tokens"] += msg_usage["input_tokens"]
+            token_usage["output_tokens"] += msg_usage["output_tokens"]
+            token_usage["total_tokens"] += msg_usage["total_tokens"]
         elif cls == "ToolMessage":
             tool_calls_made.append(msg.name if hasattr(msg, "name") else "unknown")
 

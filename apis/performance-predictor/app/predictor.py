@@ -1,4 +1,7 @@
 """"""
+import logging
+from typing import Any
+
 import torch
 
 import nn_core
@@ -49,11 +52,14 @@ def predict_model_performance(model_spec_dict: dict[str, Any], batch_size: int, 
     dataset_loader = _get_dataset_loader(dataset_name)
 
     model = nn_core.build_model_from_dict_via_pydantic(model_spec_dict)
-    print("Model built successfully. Moving to device:", device)
-    model = model.to(device)
+    model = model.to(torch_device)
+    logger.info("Model built successfully and moved to device: %s", torch_device)
 
-    print("Loading dataloader...")
-    train_dataloader, test_dataloader = get_cifar_dataloaders(batch_size, batch_size, "cifar10", 0, resize=None, datadir='_dataset')
+    if dataset_loader == "cifar":
+        train_dataloader, test_dataloader = get_cifar_dataloaders(batch_size, batch_size, dataset_name, 0, resize=None, datadir='_dataset')
+
+    elif dataset_loader == "mnist":
+        train_dataloader, test_dataloader = get_mnist_dataloaders(batch_size, batch_size, 0)
 
     dataload = "random"
     num_classes = output_nodes

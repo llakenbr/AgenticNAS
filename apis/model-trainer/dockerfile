@@ -1,0 +1,16 @@
+FROM pytorch/pytorch:2.8.0-cuda12.9-cudnn9-runtime
+
+# Copy requirements first for better caching
+COPY apis/model-trainer/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy and install nn_core source code
+COPY nn-core-taxonomy /nn-core-taxonomy
+RUN pip install /nn-core-taxonomy
+
+# Copy app source code
+COPY apis/model-trainer/app /app
+
+WORKDIR /app
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7007", "--workers", "1"]

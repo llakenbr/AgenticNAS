@@ -10,7 +10,7 @@ class HealthResponse(BaseModel):
     service: str
     version: str
     environment: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=datetime.now)
 
 
 class ErrorResponse(BaseModel):

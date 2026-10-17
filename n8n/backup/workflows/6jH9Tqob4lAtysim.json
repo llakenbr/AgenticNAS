@@ -1,0 +1,572 @@
+{
+  "updatedAt": "2026-04-13T07:55:13.467Z",
+  "createdAt": "2026-04-13T07:50:11.356Z",
+  "id": "6jH9Tqob4lAtysim",
+  "name": "model-evaluator-v3",
+  "description": null,
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "sessionID"
+            },
+            {
+              "name": "model_ID"
+            },
+            {
+              "name": "eval_type"
+            },
+            {
+              "name": "input_shape"
+            },
+            {
+              "name": "dataset"
+            },
+            {
+              "name": "output_nodes",
+              "type": "number"
+            },
+            {
+              "name": "batch_size",
+              "type": "number"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -64,
+        -80
+      ],
+      "id": "65d10f30-d5fb-4d13-baa7-ec223c87f410",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "models",
+          "mode": "list",
+          "cachedResultName": "models"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "id",
+              "value": "={{ $json.model_ID }}"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "nn_taxonomy"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        160,
+        -80
+      ],
+      "id": "c6c8c4c8-c78a-4cf9-ba0a-172a34bced23",
+      "name": "Select rows from a table",
+      "credentials": {
+        "postgres": {
+          "id": "MTKdQt9xBfmirQQt",
+          "name": "model_db"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://performance-predictor:7003/zero_estimate",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "parameters.dataset_name",
+              "value": "={{ $('When Executed by Another Workflow').item.json.dataset }}"
+            },
+            {
+              "name": "model_spec",
+              "value": "={{ $json.nn_taxonomy }}"
+            },
+            {
+              "name": "parameters.output_nodes",
+              "value": "={{ $('When Executed by Another Workflow').item.json.output_nodes }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text",
+              "outputPropertyName": "zero-cost-res"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        592,
+        -80
+      ],
+      "id": "348863a5-888f-4c70-85f6-ca2c7827453c",
+      "name": "Zero Cost Prediction"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "model_benchmarks",
+          "mode": "list",
+          "cachedResultName": "model_benchmarks"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "model_id": "={{ $('When Executed by Another Workflow').item.json.model_ID }}",
+            "benchmark_name": "zero-cost",
+            "dataset": "={{ $('When Executed by Another Workflow').item.json.dataset }}",
+            "run_label": "={{ $json.output_text.run_label ?? '' }}",
+            "metrics": "={{ $json.output_text.metrics }}",
+            "model_remarks": "={{ $json.output_text.model_remarks }}",
+            "config": "={\"batch_size\": {{ $('When Executed by Another Workflow').item.json.batch_size }}}",
+            "session_id": "={{ $('When Executed by Another Workflow').item.json.sessionID }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "model_id",
+              "displayName": "model_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "benchmark_name",
+              "displayName": "benchmark_name",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "dataset",
+              "displayName": "dataset",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "run_label",
+              "displayName": "run_label",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "metrics",
+              "displayName": "metrics",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "config",
+              "displayName": "config",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "model_remarks",
+              "displayName": "model_remarks",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "outputColumns": [
+            "id"
+          ],
+          "replaceEmptyStrings": true
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1264,
+        -80
+      ],
+      "id": "ada2a740-80f4-48b2-8bc5-1b01b37af6cb",
+      "name": "Store results",
+      "credentials": {
+        "postgres": {
+          "id": "MTKdQt9xBfmirQQt",
+          "name": "model_db"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://agent-runtime:7010/agents/model-evaluator/sessions/{{ $('When Executed by Another Workflow').item.json.sessionID }}/runs",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n\"message\": \"MODEL:\\n {{ $json.model }}\\n\\n ZERO-COST RESULTS:\\n {{ $json.metrics }}\\n\\n Constraints:\\n - Output only in defined JSON format\\n - Use metric codes\\n - Keep all fields concise\\n - No additional explanations outside the JSON fields\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1040,
+        -80
+      ],
+      "id": "2117fa03-41e8-470f-a853-bfe1a2ee10c8",
+      "name": "agent-runtime-run"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8fc85072-7d0d-4e9d-98e6-eed1bc18e1fe",
+              "name": "model",
+              "value": "={{ $('Select rows from a table').item.json.nn_taxonomy.toJsonString().toJsonString().slice(1,$('Select rows from a table').item.json.nn_taxonomy.toJsonString().toJsonString().length-1) }} }}",
+              "type": "string"
+            },
+            {
+              "id": "93bb838a-8701-47ea-9f74-5adcc5878391",
+              "name": "metrics",
+              "value": "={{ JSON.stringify($json['zero-cost-res']).slice(1,JSON.stringify($json['zero-cost-res']).length-1) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        816,
+        -80
+      ],
+      "id": "47b373dd-be81-44a5-adc2-4a8c0260fb84",
+      "name": "Convert JSON to text"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e66b085e-8696-465d-9cc7-360419f369ec",
+              "name": "model_benchmark_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "1f9e8772-c762-49cc-a609-e24623b9dd5a",
+              "name": "totalTokens",
+              "value": "={{ $('agent-runtime-run').item.json.token_usage.total_tokens }}",
+              "type": "string"
+            },
+            {
+              "id": "30e33c2e-5691-4bc1-b705-572664b3dc8d",
+              "name": "promptTokens",
+              "value": "={{ $('agent-runtime-run').item.json.token_usage.input_tokens }}",
+              "type": "string"
+            },
+            {
+              "id": "a7448b8b-9369-4eb3-928c-4a68a9996fa8",
+              "name": "=completionTokens",
+              "value": "={{ $('agent-runtime-run').item.json.token_usage.output_tokens }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1488,
+        -80
+      ],
+      "id": "9ed2419a-4e1f-4cff-8e0b-94f9e2e8966e",
+      "name": "Compose output"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('When Executed by Another Workflow').item.json.eval_type }}",
+                    "rightValue": "zero-shot",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "b4a09906-7651-40d9-bae6-d4d732679cf4"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "bd70e556-ff9e-4dc0-8040-b27d681330d9",
+                    "leftValue": "={{ $('When Executed by Another Workflow').item.json.eval_type }}",
+                    "rightValue": "model-training",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        368,
+        -80
+      ],
+      "id": "fbc2a011-f72b-4b20-9bc4-d25073344ec4",
+      "name": "Switch"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Select rows from a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select rows from a table": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Zero Cost Prediction": {
+      "main": [
+        [
+          {
+            "node": "Convert JSON to text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store results": {
+      "main": [
+        [
+          {
+            "node": "Compose output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "agent-runtime-run": {
+      "main": [
+        [
+          {
+            "node": "Store results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert JSON to text": {
+      "main": [
+        [
+          {
+            "node": "agent-runtime-run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Zero Cost Prediction",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "sessionID": "test_v0.0.2-model-evaluator",
+          "model_ID": "4ce5b0bf-61ee-453a-84f7-294884a2ec6e",
+          "eval_type": "zero-shot",
+          "input_shape": "[32, 3, 32, 32]",
+          "dataset": "cifar10",
+          "batch_size": 32,
+          "output_nodes": 10
+        }
+      }
+    ]
+  },
+  "versionId": "19d1e399-f5d6-42f5-9608-132c69c409ec",
+  "activeVersionId": null,
+  "versionCounter": 25,
+  "triggerCount": 0,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-04-13T07:50:11.356Z",
+      "createdAt": "2026-04-13T07:50:11.356Z",
+      "role": "workflow:owner",
+      "workflowId": "6jH9Tqob4lAtysim",
+      "projectId": "EqTnf87AG5HyB5dF",
+      "project": {
+        "updatedAt": "2026-10-17T08:56:55.544Z",
+        "createdAt": "2026-03-14T17:05:46.633Z",
+        "id": "EqTnf87AG5HyB5dF",
+        "name": "Luca Lakenbrink <l.lakenbrink@icloud.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "cd08fa2f-3e6c-4bf5-8905-bbf2d09f907c"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

@@ -1,14 +1,21 @@
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse, PlainTextResponse
-from fastapi.encoders import jsonable_encoder
+import logging
+import math
 
-from predictor import model_predictor_test_cifar10
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+from contextlib import asynccontextmanager
 
 import torch
 
 from pydantic import BaseModel
 import json
 import toon
+
+from core.settings import settings
+from core.logging import configure_logging
+from models.request import zeroEstimateRequest
+from predictor import predict_model_performance
 
 import nn_core
 from nn_core import ArchitectureSpec
@@ -85,7 +92,7 @@ def root() -> JSONResponse:
 
 
 @app.post("/zero_estimate")
-async def zero_estimate(request: Request):
+def zero_estimate(template: zeroEstimateRequest):
     try:
         model_spec = template.model_spec
         if isinstance(model_spec, str):
@@ -117,3 +124,9 @@ async def zero_estimate(request: Request):
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/get_dataset_options")
+def get_dataset_options():
+    logger.info("Received request for dataset options")
+    return JSONResponse(content=jsonable_encoder(settings.dataset_options))
