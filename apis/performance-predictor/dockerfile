@@ -2,7 +2,6 @@ FROM pytorch/pytorch:2.8.0-cuda12.9-cudnn9-runtime
 
 # Copy requirements first for better caching
 COPY apis/performance-predictor/requirements.txt .
-
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy and install nn_core source code

@@ -538,6 +538,7 @@
   },
   "staticData": null,
   "meta": null,
+  "nodeGroups": [],
   "pinData": {
     "When Executed by Another Workflow": [
       {
@@ -556,8 +557,9 @@
   },
   "versionId": "7c17e0e8-6323-4cee-adca-9021d748526b",
   "activeVersionId": "7c17e0e8-6323-4cee-adca-9021d748526b",
-  "versionCounter": 285,
+  "versionCounter": 290,
   "triggerCount": 0,
+  "sourceWorkflowId": null,
   "tags": [],
   "shared": [
     {
@@ -567,13 +569,14 @@
       "workflowId": "cOtne5iZCpOkDp6E",
       "projectId": "EqTnf87AG5HyB5dF",
       "project": {
-        "updatedAt": "2026-03-14T17:21:54.570Z",
+        "updatedAt": "2026-10-17T08:56:55.544Z",
         "createdAt": "2026-03-14T17:05:46.633Z",
         "id": "EqTnf87AG5HyB5dF",
-        "name": "Luca Lakenbrink <luca.lakenbrink@fom-net.de>",
+        "name": "Luca Lakenbrink <l.lakenbrink@icloud.com>",
         "type": "personal",
         "icon": null,
         "description": null,
+        "customTelemetryTags": [],
         "creatorId": "cd08fa2f-3e6c-4bf5-8905-bbf2d09f907c"
       }
     }

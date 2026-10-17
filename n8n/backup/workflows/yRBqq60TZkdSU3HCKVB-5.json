@@ -1,11 +1,11 @@
 {
-  "updatedAt": "2026-04-13T12:08:58.536Z",
+  "updatedAt": "2026-10-17T09:09:58.936Z",
   "createdAt": "2026-03-14T17:23:50.781Z",
   "id": "yRBqq60TZkdSU3HCKVB-5",
   "name": "Ochestrator",
   "description": null,
-  "active": true,
-  "isArchived": false,
+  "active": false,
+  "isArchived": true,
   "nodes": [
     {
       "parameters": {
@@ -1127,11 +1127,13 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
+  "nodeGroups": [],
   "pinData": {},
-  "versionId": "30c8c4e1-2668-4812-aa5a-bbac7839c18c",
-  "activeVersionId": "db260609-70b8-440b-8536-4512076bca2f",
-  "versionCounter": 737,
+  "versionId": "ae37540b-e550-4652-9009-7f491d1b0d1d",
+  "activeVersionId": null,
+  "versionCounter": 742,
   "triggerCount": 1,
+  "sourceWorkflowId": null,
   "tags": [],
   "shared": [
     {
@@ -1141,13 +1143,14 @@
       "workflowId": "yRBqq60TZkdSU3HCKVB-5",
       "projectId": "EqTnf87AG5HyB5dF",
       "project": {
-        "updatedAt": "2026-03-14T17:21:54.570Z",
+        "updatedAt": "2026-10-17T08:56:55.544Z",
         "createdAt": "2026-03-14T17:05:46.633Z",
         "id": "EqTnf87AG5HyB5dF",
-        "name": "Luca Lakenbrink <luca.lakenbrink@fom-net.de>",
+        "name": "Luca Lakenbrink <l.lakenbrink@icloud.com>",
         "type": "personal",
         "icon": null,
         "description": null,
+        "customTelemetryTags": [],
         "creatorId": "cd08fa2f-3e6c-4bf5-8905-bbf2d09f907c"
       }
     }

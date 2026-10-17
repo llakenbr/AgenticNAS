@@ -1,0 +1,1517 @@
+{
+  "updatedAt": "2026-07-21T19:01:10.064Z",
+  "createdAt": "2026-04-24T08:13:30.162Z",
+  "id": "eyBKjTuc2PiHMc5W",
+  "name": "model-evaluator-mesh",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2416,
+        -144
+      ],
+      "id": "615850bf-f4b1-451b-885c-459bae148ded",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "content": "## model-evaluator-agents\n",
+        "height": 448,
+        "width": 1156,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2160,
+        -272
+      ],
+      "typeVersion": 1,
+      "id": "54ea1d11-302a-4b64-a813-e8e3e25f22d2",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## model-eval-aggregator\n",
+        "height": 448,
+        "width": 384,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3488,
+        -272
+      ],
+      "typeVersion": 1,
+      "id": "3e8b6763-5225-40d7-962a-8439146ebff5",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "uW6iorPPBMPkLj8b",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/uW6iorPPBMPkLj8b",
+          "cachedResultName": "update-token-table"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "promptTokens": "={{ $json.token_usage.input_tokens }}",
+            "completionTokens": "={{ $json.token_usage.output_tokens }}",
+            "totalTokens": "={{ $json.token_usage.total_tokens }}",
+            "sessionID": "={{ $('When Executed by Another Workflow').item.json.sessionID }}",
+            "sourceAgent": "model-evaluator-mesh"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "sessionID",
+              "displayName": "sessionID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "totalTokens",
+              "displayName": "totalTokens",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "promptTokens",
+              "displayName": "promptTokens",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "completionTokens",
+              "displayName": "completionTokens",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "sourceAgent",
+              "displayName": "sourceAgent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": true,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2864,
+        -48
+      ],
+      "id": "edb208e3-5b34-460f-b4d4-8357d159fffe",
+      "name": "Call 'update-token-table' (explorer)",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f600c603-d6b6-409d-a28b-2be4a40f5145",
+              "name": "output_text",
+              "value": "={{ $('agent-runtime-run (evaluator)').item.json.output_text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3088,
+        -48
+      ],
+      "id": "13f0942d-7d6c-41c5-92f0-ff2137d0fb4f",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://agent-runtime:7010/agents/model-eval-aggregator/sessions/{{ $('Set agent-sessionID').item.json['agent-sessionID'] }}/runs",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"message\": \"Democratic consolidation task:\\n- The orchestrator request is below.\\n- The json_input.evaluations field contains the complete list of evaluator JSON outputs.\\n- Merge matching signals by majority vote and return one consensus result using the same schema.\\n\\nThis is the request from the overarching Orchestrator Agent:\\n{{ $('When Executed by Another Workflow').item.json.chatInput }}\",\n    \"json_input\": {\"evaluations\": [{{ $json.evaluations }}]}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3520,
+        -144
+      ],
+      "id": "8a7670c8-0deb-4802-bf57-866c6a3df325",
+      "name": "agent-runtime-run (aggregator)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://performance-predictor:7003/zero_estimate",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "parameters.dataset_name",
+              "value": "={{ $('When Executed by Another Workflow').item.json.dataset }}"
+            },
+            {
+              "name": "model_spec",
+              "value": "={{ $('Select rows from a table').item.json.nn_taxonomy }}"
+            },
+            {
+              "name": "parameters.output_nodes",
+              "value": "={{ $('When Executed by Another Workflow').item.json.output_nodes }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text",
+              "outputPropertyName": "zero-cost-res"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        400,
+        -176
+      ],
+      "id": "9dc6533f-434c-44b5-9b8a-7b088692596a",
+      "name": "Zero Cost Prediction"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://model-trainer:7007/submit-train-job",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model_spec",
+              "value": "={{ $('Select rows from a table').item.json.nn_taxonomy }}"
+            },
+            {
+              "name": "training_parameters.loss_function",
+              "value": "={{ $json.loss_function }}"
+            },
+            {
+              "name": "training_parameters.optimizer",
+              "value": "={{ $json.optimizer }}"
+            },
+            {
+              "name": "training_parameters.epochs",
+              "value": "={{ $json.epochs }}"
+            },
+            {
+              "name": "training_parameters.dataset_name",
+              "value": "={{ $('When Executed by Another Workflow').item.json.dataset }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        624,
+        144
+      ],
+      "id": "f1d6ed5b-56d5-489f-bb09-92d32deec1ab",
+      "name": "submit-train-job"
+    },
+    {
+      "parameters": {
+        "amount": 15
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        848,
+        144
+      ],
+      "id": "0710d30c-9d5b-41f3-8b56-f3aa0f2b9770",
+      "name": "Wait",
+      "webhookId": "f990c1bf-f780-4f90-9191-ec95e1bc456e"
+    },
+    {
+      "parameters": {
+        "url": "=http://model-trainer:7007/train-jobs/{{ $('submit-train-job').item.json.job_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1072,
+        144
+      ],
+      "id": "c7e9260d-9cdf-4bc7-ac09-af7842d87dfa",
+      "name": "Job status"
+    },
+    {
+      "parameters": {
+        "url": "=http://model-trainer:7007/train-jobs/{{ $('submit-train-job').item.json.job_id }}/result",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text",
+              "outputPropertyName": "metrics"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1520,
+        48
+      ],
+      "id": "0b5701b3-592f-432f-8daa-3ea05ad2a5a3",
+      "name": "Job results"
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ $('Job status').item.json.error }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1520,
+        240
+      ],
+      "id": "4f0c81a0-225a-4cd9-990a-cad5ae93ca85",
+      "name": "Stop and Error"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "625a1837-e4f0-4f49-9461-a2b1c5f18e9c",
+              "name": "epochs",
+              "value": "={{ Math.min($('When Executed by Another Workflow').item.json.training_epochs || 10, 50) }}",
+              "type": "string"
+            },
+            {
+              "id": "7c29285a-9f88-473c-af8a-662fa9d29def",
+              "name": "optimizer",
+              "value": "={{ $('When Executed by Another Workflow').item.json.training_optimizer || \"AdamW\"}}",
+              "type": "string"
+            },
+            {
+              "id": "fa51e2b0-622b-43af-afcf-d21d8c6a1893",
+              "name": "loss_function",
+              "value": "={{ $('When Executed by Another Workflow').item.json.training_loss_function }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        400,
+        144
+      ],
+      "id": "7b2959e5-e3da-4679-9497-284d12724cb0",
+      "name": "Set training parameters"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "93bb838a-8701-47ea-9f74-5adcc5878391",
+              "name": "metrics",
+              "value": "={{ JSON.stringify($json['zero-cost-res']).slice(1,JSON.stringify($json['zero-cost-res']).length-1) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        624,
+        -176
+      ],
+      "id": "a98ad33e-25e9-45fc-8f36-1897215fca0f",
+      "name": "Zero-cost results"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8fc85072-7d0d-4e9d-98e6-eed1bc18e1fe",
+              "name": "model",
+              "value": "={{ $('Select rows from a table').item.json.nn_taxonomy.toJsonString().toJsonString().slice(1,$('Select rows from a table').item.json.nn_taxonomy.toJsonString().toJsonString().length-1) }} }}",
+              "type": "string"
+            },
+            {
+              "id": "93bb838a-8701-47ea-9f74-5adcc5878391",
+              "name": "metrics",
+              "value": "={{ $json.metrics }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1968,
+        -144
+      ],
+      "id": "a87776fa-afb1-4454-b3e1-f1b33c7ec0a3",
+      "name": "Parse agent-runtime inputs"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "93bb838a-8701-47ea-9f74-5adcc5878391",
+              "name": "metrics",
+              "value": "={{ JSON.stringify($json['metrics']).slice(1,JSON.stringify($json['metrics']).length-1) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1744,
+        48
+      ],
+      "id": "4635e539-7197-4cf3-a947-b28e1478161e",
+      "name": "Training results"
+    },
+    {
+      "parameters": {
+        "errorMessage": "Incorrect mode selected, set mode to \"zero-cost\" or \"training\""
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        400,
+        480
+      ],
+      "id": "71b4a1f1-ff84-4e94-97ad-e47be75b052a",
+      "name": "Stop and Error1"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "running",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "50da9fe3-3910-4dc3-94e5-20aaafc784eb"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "16572528-6dde-4fa4-91a6-73f4575fec8e",
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "succeeded",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "5089395c-16b8-44e6-8aab-b838fccad113",
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "failed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1296,
+        128
+      ],
+      "id": "8f1e49fd-1c7e-42eb-b249-7e51c474b2d4",
+      "name": "Switch4"
+    },
+    {
+      "parameters": {
+        "content": "## Training",
+        "height": 368,
+        "width": 1472
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        384,
+        32
+      ],
+      "typeVersion": 1,
+      "id": "5d25bb20-e601-483b-a9b3-539f7cd6b7d3",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## Zero-cost",
+        "height": 224,
+        "width": 1472
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        384,
+        -256
+      ],
+      "typeVersion": 1,
+      "id": "8ebe9a0e-45a6-4ce7-acfe-5b83be441ba7",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('When Executed by Another Workflow').item.json.mode }}",
+                    "rightValue": "zero-cost",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "1ce89cf4-720b-4881-89bf-ee6071a1909a"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "6d112d88-2ad5-4ba4-a41c-5a81ccbf636f",
+                    "leftValue": "={{ $('When Executed by Another Workflow').item.json.mode }}",
+                    "rightValue": "training",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        176,
+        128
+      ],
+      "id": "aa776972-ecfa-4e2a-a8c9-65b6539203cb",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "sessionID"
+            },
+            {
+              "name": "mode"
+            },
+            {
+              "name": "model_ID"
+            },
+            {
+              "name": "input_shape"
+            },
+            {
+              "name": "dataset"
+            },
+            {
+              "name": "output_nodes",
+              "type": "number"
+            },
+            {
+              "name": "batch_size",
+              "type": "number"
+            },
+            {
+              "name": "training_loss_function",
+              "type": "any"
+            },
+            {
+              "name": "training_optimizer",
+              "type": "any"
+            },
+            {
+              "name": "training_epochs",
+              "type": "any"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -720,
+        144
+      ],
+      "id": "cf9de9e3-7c29-4b62-bd83-2214215e87eb",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://agent-runtime:7010/agents/{{ $json.agent_id }}/sessions/{{ $('Set agent-sessionID').item.json['agent-sessionID'] }}/runs",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message",
+              "value": "={\n    \"message\":  \"MODEL:\\n{{ $('Select rows from a table').item.json.nn_taxonomy }}\\n\\nMODE:\\n{{ $('When Executed by Another Workflow').item.json.mode }}\\n\\nRESULTS:\\n{{ $('Parse agent-runtime inputs').item.json.metrics }}\\n\\nConstraints:\\n- Output JSON only.\\n- Use zero-cost rules for proxy metrics and training rules for train/test metrics.\\n- In training mode, use train_loss, train_accuracy, test_loss, and test_accuracy; compare train/test gaps for generalization and overfitting.\\n- Keep every field concise.\\n- Omit model_remarks unless there is a clear, high-signal diagnosis.\\n- Use metric codes exactly as provided. When mode=training -> Accuracy ranges from 0.0 to 100\"\n}\n"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 400000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2640,
+        -48
+      ],
+      "id": "6e0ab3de-6448-423c-b82d-255517201c00",
+      "name": "agent-runtime-run (evaluator)",
+      "retryOnFail": false,
+      "maxTries": 2,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "output_text",
+              "renameField": true,
+              "outputFieldName": "evaluations"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2640,
+        -240
+      ],
+      "id": "c55dda20-5253-4e3f-b0bf-5e89a666a8e3",
+      "name": "evaluations"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "model_benchmarks",
+          "mode": "list",
+          "cachedResultName": "model_benchmarks"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "model_id": "={{ $('When Executed by Another Workflow').item.json.model_ID }}",
+            "dataset": "={{ $('When Executed by Another Workflow').item.json.dataset }}",
+            "run_label": "={{ $json.output_text.run_label ?? '' }}",
+            "metrics": "={{ $json.output_text.metrics }}",
+            "model_remarks": "={{ $json.output_text.model_remarks }}",
+            "config": "={{ $('When Executed by Another Workflow').item.json.toJsonString() }}",
+            "session_id": "={{ $('When Executed by Another Workflow').item.json.sessionID }}",
+            "benchmark_name": "={{ $('When Executed by Another Workflow').item.json.mode }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "model_id",
+              "displayName": "model_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "benchmark_name",
+              "displayName": "benchmark_name",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "dataset",
+              "displayName": "dataset",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "run_label",
+              "displayName": "run_label",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "metrics",
+              "displayName": "metrics",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "config",
+              "displayName": "config",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "model_remarks",
+              "displayName": "model_remarks",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "outputColumns": [
+            "id"
+          ],
+          "replaceEmptyStrings": true
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3744,
+        -144
+      ],
+      "id": "3b7a69f8-6c08-4fb4-b170-ca0e5d7e09cc",
+      "name": "Store results",
+      "credentials": {
+        "postgres": {
+          "id": "MTKdQt9xBfmirQQt",
+          "name": "model_db"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e66b085e-8696-465d-9cc7-360419f369ec",
+              "name": "model_benchmark_id",
+              "value": "={{ $('Store results').item.json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "1f9e8772-c762-49cc-a609-e24623b9dd5a",
+              "name": "totalTokens",
+              "value": "={{ $('agent-runtime-run (aggregator)').item.json.token_usage.total_tokens }}",
+              "type": "string"
+            },
+            {
+              "id": "30e33c2e-5691-4bc1-b705-572664b3dc8d",
+              "name": "promptTokens",
+              "value": "={{ $('agent-runtime-run (aggregator)').item.json.token_usage.input_tokens }}",
+              "type": "string"
+            },
+            {
+              "id": "a7448b8b-9369-4eb3-928c-4a68a9996fa8",
+              "name": "=completionTokens",
+              "value": "={{ $('agent-runtime-run (aggregator)').item.json.token_usage.output_tokens }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4416,
+        -144
+      ],
+      "id": "2b1b57ce-130b-4449-83d7-2216899a98cb",
+      "name": "Compose output"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "uW6iorPPBMPkLj8b",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/uW6iorPPBMPkLj8b",
+          "cachedResultName": "update-token-table"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "promptTokens": "={{ $('agent-runtime-run (aggregator)').item.json.token_usage.input_tokens }}",
+            "completionTokens": "={{ $('agent-runtime-run (aggregator)').item.json.token_usage.output_tokens }}",
+            "totalTokens": "={{ $('agent-runtime-run (aggregator)').item.json.token_usage.total_tokens }}",
+            "sessionID": "={{ $('When Executed by Another Workflow').item.json.sessionID }}",
+            "sourceAgent": "model-evaluator-mesh"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "sessionID",
+              "displayName": "sessionID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "totalTokens",
+              "displayName": "totalTokens",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "promptTokens",
+              "displayName": "promptTokens",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "completionTokens",
+              "displayName": "completionTokens",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "sourceAgent",
+              "displayName": "sourceAgent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": true,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        3968,
+        -144
+      ],
+      "id": "777da68b-2885-4414-aeea-4f7db2aa6e33",
+      "name": "Call 'update-token-table'"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://agent-memory:7011/episodes",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"session_id\": \"{{ $('When Executed by Another Workflow').item.json.sessionID }}\",\n  \"agent\": \"model-evaluator\",\n  \"message\": \"{{ $('agent-runtime-run (aggregator)').item.json.output_text.model_remarks }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4192,
+        -144
+      ],
+      "id": "fd1755e5-8aff-4403-8ba9-80ccc123cf5a",
+      "name": "Add episode (response)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "56f59304-e667-4781-beaf-262dde7d01a1",
+              "name": "agent-sessionID",
+              "value": "={{ $json.sessionID }}-model-evaluator",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -496,
+        144
+      ],
+      "id": "70fd236a-22b7-45ed-8344-78e7fe3914d1",
+      "name": "Set agent-sessionID"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://agent-memory:7011/episodes",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"session_id\": \"{{ $('When Executed by Another Workflow').item.json.sessionID }}\",\n  \"agent\": \"orchestrator\",\n  \"message\": {\n    \"model_id\": \"{{ $('When Executed by Another Workflow').item.json.model_ID }}\",\n    \"mode\": \"{{ $('When Executed by Another Workflow').item.json.mode }}\",\n    \"epochs\": \"{{ $('When Executed by Another Workflow').item.json.mode ?? ''}}\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -272,
+        144
+      ],
+      "id": "b629c0c1-c61f-4b93-8b82-f0aaa54da420",
+      "name": "Add episode (request)"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "models",
+          "mode": "list",
+          "cachedResultName": "models"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "id",
+              "value": "={{ $('When Executed by Another Workflow').item.json.model_ID }}"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "nn_taxonomy"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -48,
+        144
+      ],
+      "id": "9a384bd9-f6a2-4bad-bc2a-a5ecd320fff5",
+      "name": "Select rows from a table",
+      "credentials": {
+        "postgres": {
+          "id": "MTKdQt9xBfmirQQt",
+          "name": "model_db"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "eWhKLZ6q2ZTogEjU",
+          "mode": "list",
+          "cachedResultName": "agent-runtime-agents",
+          "cachedResultUrl": "/projects/EqTnf87AG5HyB5dF/datatables/eWhKLZ6q2ZTogEjU"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "mesh",
+              "keyValue": "model-evaluator"
+            },
+            {
+              "keyName": "mesh_layer",
+              "keyValue": "model-evaluator"
+            }
+          ]
+        },
+        "returnAll": true,
+        "orderBy": true,
+        "orderByColumn": "agent_id"
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        2192,
+        -144
+      ],
+      "id": "f10e03bb-e7c4-47f4-8db6-2b9a13c08beb",
+      "name": "Get model-evaluator-agents"
+    }
+  ],
+  "connections": {
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "evaluations",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "agent-runtime-run (evaluator)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'update-token-table' (explorer)": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "agent-runtime-run (aggregator)": {
+      "main": [
+        [
+          {
+            "node": "Store results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Zero Cost Prediction": {
+      "main": [
+        [
+          {
+            "node": "Zero-cost results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "submit-train-job": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Job status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Job status": {
+      "main": [
+        [
+          {
+            "node": "Switch4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Job results": {
+      "main": [
+        [
+          {
+            "node": "Training results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set training parameters": {
+      "main": [
+        [
+          {
+            "node": "submit-train-job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Zero-cost results": {
+      "main": [
+        [
+          {
+            "node": "Parse agent-runtime inputs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Training results": {
+      "main": [
+        [
+          {
+            "node": "Parse agent-runtime inputs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch4": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Job results",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse agent-runtime inputs": {
+      "main": [
+        [
+          {
+            "node": "Get model-evaluator-agents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Zero Cost Prediction",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set training parameters",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Set agent-sessionID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "agent-runtime-run (evaluator)": {
+      "main": [
+        [
+          {
+            "node": "Call 'update-token-table' (explorer)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "evaluations": {
+      "main": [
+        [
+          {
+            "node": "agent-runtime-run (aggregator)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store results": {
+      "main": [
+        [
+          {
+            "node": "Call 'update-token-table'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'update-token-table'": {
+      "main": [
+        [
+          {
+            "node": "Add episode (response)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add episode (response)": {
+      "main": [
+        [
+          {
+            "node": "Compose output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set agent-sessionID": {
+      "main": [
+        [
+          {
+            "node": "Add episode (request)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add episode (request)": {
+      "main": [
+        [
+          {
+            "node": "Select rows from a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select rows from a table": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get model-evaluator-agents": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "sessionID": "0010da6a299a37aab06a2cf38719ba6fe7bfbed154768fb087b9a02421d8bbd9",
+          "mode": "zero-cost",
+          "model_ID": "719308ed-9b31-44c6-b693-97a09c23b4c0",
+          "input_shape": "[256, 3, 16, 16]",
+          "dataset": "ImageNet16-120",
+          "output_nodes": 120,
+          "batch_size": 256,
+          "training_loss_function": "CrossEntropyLoss",
+          "training_optimizer": "AdamW",
+          "training_epochs": 5
+        }
+      }
+    ]
+  },
+  "versionId": "b80d5ed3-dbe2-4573-abf2-5a8cf4260dec",
+  "activeVersionId": "b80d5ed3-dbe2-4573-abf2-5a8cf4260dec",
+  "versionCounter": 186,
+  "triggerCount": 0,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-04-24T08:13:30.162Z",
+      "createdAt": "2026-04-24T08:13:30.162Z",
+      "role": "workflow:owner",
+      "workflowId": "eyBKjTuc2PiHMc5W",
+      "projectId": "EqTnf87AG5HyB5dF",
+      "project": {
+        "updatedAt": "2026-10-17T08:56:55.544Z",
+        "createdAt": "2026-03-14T17:05:46.633Z",
+        "id": "EqTnf87AG5HyB5dF",
+        "name": "Luca Lakenbrink <l.lakenbrink@icloud.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "cd08fa2f-3e6c-4bf5-8905-bbf2d09f907c"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": "Version b80d5ed3",
+    "description": ""
+  }
+}

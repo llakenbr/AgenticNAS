@@ -1,11 +1,11 @@
 {
-  "updatedAt": "2026-04-13T11:39:22.654Z",
+  "updatedAt": "2026-10-17T09:10:07.816Z",
   "createdAt": "2026-04-09T11:45:28.094Z",
   "id": "4XWSDpzKyZfQKNoO",
   "name": "model-generator-v2",
   "description": null,
-  "active": true,
-  "isArchived": false,
+  "active": false,
+  "isArchived": true,
   "nodes": [
     {
       "parameters": {
@@ -395,6 +395,7 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
+  "nodeGroups": [],
   "pinData": {
     "When Executed by Another Workflow": [
       {
@@ -410,10 +411,11 @@
       }
     ]
   },
-  "versionId": "5cc55d41-a746-41e4-9e41-1199d1a47299",
-  "activeVersionId": "5cc55d41-a746-41e4-9e41-1199d1a47299",
-  "versionCounter": 139,
+  "versionId": "721c23cd-915e-4ed6-8632-70b5f1041599",
+  "activeVersionId": null,
+  "versionCounter": 144,
   "triggerCount": 0,
+  "sourceWorkflowId": null,
   "tags": [],
   "shared": [
     {
@@ -423,19 +425,20 @@
       "workflowId": "4XWSDpzKyZfQKNoO",
       "projectId": "EqTnf87AG5HyB5dF",
       "project": {
-        "updatedAt": "2026-03-14T17:21:54.570Z",
+        "updatedAt": "2026-10-17T08:56:55.544Z",
         "createdAt": "2026-03-14T17:05:46.633Z",
         "id": "EqTnf87AG5HyB5dF",
-        "name": "Luca Lakenbrink <luca.lakenbrink@fom-net.de>",
+        "name": "Luca Lakenbrink <l.lakenbrink@icloud.com>",
         "type": "personal",
         "icon": null,
         "description": null,
+        "customTelemetryTags": [],
         "creatorId": "cd08fa2f-3e6c-4bf5-8905-bbf2d09f907c"
       }
     }
   ],
   "versionMetadata": {
-    "name": "Version 5cc55d41",
-    "description": ""
+    "name": null,
+    "description": null
   }
 }

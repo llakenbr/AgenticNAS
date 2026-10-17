@@ -3,6 +3,7 @@ import logging
 
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
+from contextlib import asynccontextmanager
 
 from core.logging import configure_logging
 from core.settings import settings
@@ -20,15 +21,10 @@ configure_logging(
 
 logger = logging.getLogger(__name__)
 
-app = FastAPI(
-    title=settings.app_name,
-    description=settings.app_description,
-    version=settings.app_version,
-)
 
-
-@app.on_event("startup")
-def startup_event() -> None:
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # startup
     Base.metadata.create_all(bind=engine)
     init_checkpointer()
     logger.info(
@@ -40,6 +36,16 @@ def startup_event() -> None:
         settings.postgres_port,
         settings.postgres_db,
     )
+    yield
+    # shutdown
+
+
+app = FastAPI(
+    title=settings.app_name,
+    description=settings.app_description,
+    version=settings.app_version,
+    lifespan=lifespan,
+)
 
 
 @app.get("/")

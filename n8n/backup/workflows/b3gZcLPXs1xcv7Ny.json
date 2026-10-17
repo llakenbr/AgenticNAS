@@ -1,0 +1,598 @@
+{
+  "updatedAt": "2026-10-17T09:08:07.398Z",
+  "createdAt": "2026-03-21T13:06:02.968Z",
+  "id": "b3gZcLPXs1xcv7Ny",
+  "name": "model-evaluator",
+  "description": null,
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "sessionID"
+            },
+            {
+              "name": "model_ID"
+            },
+            {
+              "name": "input_shape"
+            },
+            {
+              "name": "dataset"
+            },
+            {
+              "name": "batch_size",
+              "type": "number"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -64,
+        0
+      ],
+      "id": "8b5d37bc-d03c-422d-886b-80c8180fc9d0",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=MODEL:\n{{ $('Select rows from a table').item.json.nn_taxonomy }}\n\nZERO-COST RESULTS:\n{{ $json['zero-cost-res'] }}\n\nConstraints:\n- Output only in defined JSON format\n- Use metric codes\n- Keep all fields concise\n- No additional explanations outside the JSON fields",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are a neural network architecture evaluator specialized in zero-cost proxy interpretation for architecture search and model diagnostics.\n\nYour task:\n- Analyze the provided model metadata and zero-cost proxy metrics.\n- Detect the most important architectural and optimization risks.\n- Produce compact, high-signal remarks that can be stored directly in the database.\n\nOutput contract:\n- Output MUST be valid JSON only.\n- Output MUST match this exact top-level schema:\n  {\n    \"run_label\": \"string, optional human-readable name for the run\",\n    \"metrics\": { ... },\n    \"model_remarks\": { ... }\n  }\n- \"metrics\" is required.\n- Do NOT output any additional top-level keys.\n- If \"run_label\" is not inferable from the input, omit it.\n- If there are no meaningful remarks, omit \"model_remarks\".\n\nRequired semantics:\n- \"metrics\" must contain the normalized interpretation of the input proxy values.\n- \"model_remarks\" must contain only high-value diagnostic conclusions and actions.\n- Every recommendation must be explicitly supported by one or more metrics.\n- Prefer fewer, stronger findings over many weak ones.\n- Be concise, specific, and parseable.\n\nMetric mapping:\n- GN = grad_norm\n- SN = snip\n- GR = grasp\n- FI = fisher\n- JC = jacob_cov\n- PL = plain\n- SF = synflow\n- SFB = synflow_bn\n\nInterpretation guide:\n- GN: gradient strength and gradient flow stability; extreme values may indicate vanishing or exploding gradients.\n- SN: parameter saliency; low values suggest redundant parameters or weakly useful structure.\n- GR: pruning sensitivity and optimization robustness; near-zero or negative values suggest fragile training dynamics.\n- FI: parameter sensitivity to loss; very low values can indicate dead layers, weak feature usage, or underpowered learning.\n- JC: representation diversity; strongly pathological values suggest feature collapse or poor layerwise expressivity.\n- PL: baseline trainability signal; weak values indicate optimization difficulty.\n- SF: global trainability and path health; very low or zero values suggest broken or ineffective signal propagation.\n- SFB: batch-norm-aware trainability; weak values relative to SF can indicate normalization-path interaction issues or blocked learning through BN-dependent paths.\n\nPrimary issue types to detect:\n- bottleneck\n- depth_width_imbalance\n- activation_normalization_issue\n- feature_collapse\n- redundancy\n- gradient_problem\n- optimization_fragility\n- dead_path_risk\n\nPrioritization rules:\n1. Report only the most impactful 1-4 issues.\n2. Rank issues by likely effect on trainability, convergence speed, and generalization.\n3. Avoid generic advice such as \"tune hyperparameters\" unless the proxy pattern strongly indicates architectural causes are insufficient.\n4. Recommendations must be architectural and targeted, for example:\n   - reduce excessive depth\n   - widen early or mid layers\n   - add or fix residual connections\n   - change activation function\n   - revise normalization placement\n   - reduce redundant blocks\n   - increase feature mixing\n   - remove bottleneck compression\n   - stabilize downsampling transitions\n\nRules for \"metrics\":\n- Preserve raw input values when available.\n- For each provided metric, output an object in this form:\n  \"<METRIC_NAME>\": {\n    \"raw\": <number|null>,\n    \"status\": \"<high|medium|low|critical|unknown>\",\n    \"interpretation\": \"<short technical meaning>\",\n    \"evidence_role\": \"<what this metric contributes to the diagnosis>\"\n  }\n- Only include metrics that are present in the input, unless a missing metric is important to note.\n- Do not invent numeric values.\n\nRules for \"model_remarks\":\n- Use this exact structure:\n  {\n    \"summary\": {\n      \"trainability\": \"<short assessment>\",\n      \"convergence\": \"<short assessment>\",\n      \"generalization\": \"<short assessment>\"\n    },\n    \"priority_issues\": [\n      {\n        \"issue\": \"<issue_type>\",\n        \"severity\": \"<high|medium|low>\",\n        \"confidence\": \"<high|medium|low>\",\n        \"metric_evidence\": [\n          {\n            \"metric\": \"<metric name>\",\n            \"reason\": \"<why this metric supports the issue>\"\n          }\n        ],\n        \"diagnosis\": \"<concise technical diagnosis>\",\n        \"targeted_modification\": \"<specific architectural change>\",\n        \"expected_effect\": \"<expected improvement if the change is applied>\"\n      }\n    ]\n  }\n\nQuality bar for remarks:\n- \"diagnosis\" should explain the structural problem, not restate the metric.\n- \"targeted_modification\" must be concrete and architecture-level.\n- \"expected_effect\" must connect to trainability, convergence, stability, or generalization.\n- Avoid vague phrases like \"model may benefit from improvement.\"\n- Use calibrated language: \"suggests\", \"indicates\", \"strongly indicates\", \"consistent with\".\n\nReasoning policy:\n- Infer issues from metric combinations, not isolated metrics when possible.\n- Treat conflicting proxy signals carefully and lower confidence when evidence is mixed.\n- If metrics are insufficient for a strong conclusion, say so briefly and keep remarks minimal.\n\nOutput example:\n{\n  \"run_label\": \"resnet_variant_a\",\n  \"metrics\": {\n    \"GN\": {\n      \"raw\": 0.12,\n      \"status\": \"low\",\n      \"interpretation\": \"Weak gradient magnitude suggests impaired gradient flow.\",\n      \"evidence_role\": \"Supports gradient_problem assessment.\"\n    },\n    \"SF\": {\n      \"raw\": 0.01,\n      \"status\": \"critical\",\n      \"interpretation\": \"Near-zero synflow indicates severely impaired global trainability.\",\n      \"evidence_role\": \"Supports dead_path_risk and optimization difficulty.\"\n    }\n  },\n  \"model_remarks\": {\n    \"summary\": {\n      \"trainability\": \"Poor trainability with likely signal propagation issues.\",\n      \"convergence\": \"Slow or unstable convergence is likely.\",\n      \"generalization\": \"Generalization is hard to assess reliably until trainability improves.\"\n    },\n    \"priority_issues\": [\n      {\n        \"issue\": \"dead_path_risk\",\n        \"severity\": \"high\",\n        \"confidence\": \"high\",\n        \"metric_evidence\": [\n          {\n            \"metric\": \"SF\",\n            \"reason\": \"Near-zero synflow is consistent with blocked or ineffective parameter paths.\"\n          },\n          {\n            \"metric\": \"GN\",\n            \"reason\": \"Low gradient norm reinforces the signal propagation concern.\"\n          }\n        ],\n        \"diagnosis\": \"The architecture likely contains ineffective signal routes that reduce useful gradient transport across layers.\",\n        \"targeted_modification\": \"Introduce or strengthen residual connections and remove overly compressive transitions in the main path.\",\n        \"expected_effect\": \"Should improve end-to-end gradient flow, increase optimization stability, and accelerate convergence.\"\n      }\n    ]\n  }\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        736,
+        0
+      ],
+      "id": "6e6b3f8c-b943-4c05-be04-d5ee710840b0",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Tool to validate a ARCHITECTURE_SPEC model",
+        "method": "POST",
+        "url": "http://model-faciliator:7002/validate",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Body', `Raw generated ARCHITECTURE_SPEC in JSON format`, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        864,
+        224
+      ],
+      "id": "774c8be7-86a5-4701-b64b-8eb080204a21",
+      "name": "validate-model-architecture"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"run_label\": {\n      \"type\": \"string\",\n      \"description\": \"Human-readable run_label; will be stored in the 'name' TEXT column.\"\n    },\n    \"metrics\": {\n      \"type\": \"object\",\n      \"description\": \"Metrics stored as JSON'.\"\n    },\n    \"model_remarks\": {\n      \"type\": \"object\",\n      \"description\": \"Optional remarks about the model'.\"\n    }\n  },\n  \"required\": [\n    \"metrics\"\n  ],\n  \"additionalProperties\": false\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        992,
+        224
+      ],
+      "id": "eb30251d-4993-485e-ac55-cb1f8584f9ae",
+      "name": "Structured Output Parser",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "models",
+          "mode": "list",
+          "cachedResultName": "models"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "id",
+              "value": "={{ $json.model_ID }}"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "nn_taxonomy"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        160,
+        0
+      ],
+      "id": "a894e11c-2555-48f9-a5ea-0be109fc86bb",
+      "name": "Select rows from a table",
+      "credentials": {
+        "postgres": {
+          "id": "MTKdQt9xBfmirQQt",
+          "name": "model_db"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://performance-predictor:7003/zero_estimate",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "parameters.batch_size",
+              "value": "={{ $('When Executed by Another Workflow').item.json.batch_size }}"
+            },
+            {
+              "name": "model_spec",
+              "value": "={{ $json.nn_taxonomy }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text",
+              "outputPropertyName": "zero-cost-res"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        384,
+        0
+      ],
+      "id": "1aa9c1f1-a0ba-49d1-af50-941719cef5e1",
+      "name": "Zero Cost Prediction"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "model_benchmarks",
+          "mode": "list",
+          "cachedResultName": "model_benchmarks"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "model_id": "={{ $('When Executed by Another Workflow').item.json.model_ID }}",
+            "benchmark_name": "zero-cost",
+            "dataset": "={{ $('When Executed by Another Workflow').item.json.dataset }}",
+            "run_label": "={{ $('AI Agent').item.json.output.run_label }}",
+            "metrics": "={{ $('AI Agent').item.json.output.metrics }}",
+            "model_remarks": "={{ $('AI Agent').item.json.output.model_remarks }}",
+            "config": "={\"batch_size\": {{ $('When Executed by Another Workflow').item.json.batch_size }}}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "model_id",
+              "displayName": "model_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "benchmark_name",
+              "displayName": "benchmark_name",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "dataset",
+              "displayName": "dataset",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "run_label",
+              "displayName": "run_label",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "metrics",
+              "displayName": "metrics",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "config",
+              "displayName": "config",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "model_remarks",
+              "displayName": "model_remarks",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "outputColumns": [
+            "id"
+          ],
+          "replaceEmptyStrings": true
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1552,
+        0
+      ],
+      "id": "733c60c0-14b5-42e0-8902-6f54ab39ed88",
+      "name": "Store results",
+      "credentials": {
+        "postgres": {
+          "id": "MTKdQt9xBfmirQQt",
+          "name": "model_db"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e66b085e-8696-465d-9cc7-360419f369ec",
+              "name": "model_benchmark_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1776,
+        0
+      ],
+      "id": "ce73ad56-d603-468e-899f-08a9dacba9d7",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('When Executed by Another Workflow').item.json.sessionID }}",
+        "contextWindowLength": 15
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        736,
+        224
+      ],
+      "id": "2eab251c-d925-4d4f-94ea-377affa9ccf0",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "EToifuel9TOlc6yo",
+          "name": "n8n_user"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "grok-4-fast-reasoning",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        336
+      ],
+      "id": "6312b633-bddb-4deb-8c2a-a8af6be4b121",
+      "name": "Azure grok-4-fast-reasoning",
+      "credentials": {
+        "azureOpenAiApi": {
+          "id": "vuyHHFR79qfaFdDD",
+          "name": "Azure Open AI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "={{ $('When Executed by Another Workflow').item.json.sessionID }}: {{ $json.output.metrics.ISSUES }}, {{ $json.output.model_remarks }}"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryManager",
+      "typeVersion": 1.1,
+      "position": [
+        1200,
+        0
+      ],
+      "id": "f4ddc2b2-bf40-4a3f-b825-32f75caec1c2",
+      "name": "Chat Memory Manager"
+    },
+    {
+      "parameters": {
+        "model": "gpt-5.3-chat",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        608,
+        224
+      ],
+      "id": "6ce8469f-45d8-4d9b-8a3a-222f4b683ec1",
+      "name": "Azure gpt-5.3-chat",
+      "credentials": {
+        "azureOpenAiApi": {
+          "id": "vuyHHFR79qfaFdDD",
+          "name": "Azure Open AI account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Select rows from a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "validate-model-architecture": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Chat Memory Manager",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select rows from a table": {
+      "main": [
+        [
+          {
+            "node": "Zero Cost Prediction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Zero Cost Prediction": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store results": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "Chat Memory Manager",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Azure grok-4-fast-reasoning": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Chat Memory Manager": {
+      "main": [
+        [
+          {
+            "node": "Store results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Azure gpt-5.3-chat": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "sessionID": "test-model-evaluator",
+          "model_ID": "3fc74d2c-d023-4f80-a0da-f908ac1a0c2a",
+          "input_shape": "[1, 3, 32, 32]",
+          "dataset": "cifar10",
+          "batch_size": 64
+        }
+      }
+    ]
+  },
+  "versionId": "d925c4ff-465d-4b92-8d35-71b9c609a497",
+  "activeVersionId": null,
+  "versionCounter": 256,
+  "triggerCount": 0,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-03-21T13:06:02.968Z",
+      "createdAt": "2026-03-21T13:06:02.968Z",
+      "role": "workflow:owner",
+      "workflowId": "b3gZcLPXs1xcv7Ny",
+      "projectId": "EqTnf87AG5HyB5dF",
+      "project": {
+        "updatedAt": "2026-10-17T08:56:55.544Z",
+        "createdAt": "2026-03-14T17:05:46.633Z",
+        "id": "EqTnf87AG5HyB5dF",
+        "name": "Luca Lakenbrink <l.lakenbrink@icloud.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "cd08fa2f-3e6c-4bf5-8905-bbf2d09f907c"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

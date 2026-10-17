@@ -2,5 +2,6 @@ fastapi
 uvicorn
 torch
 pydantic
+pydantic-settings
 PyYAML
 toonify>=1.6.0

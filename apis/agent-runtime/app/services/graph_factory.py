@@ -29,8 +29,48 @@ from services.tool_registry import resolve_tools
 
 logger = logging.getLogger(__name__)
 
-_POSTGRES_CONNECT_TIMEOUT = 10
+_POSTGRES_CONNECT_TIMEOUT = 15
 _checkpointer: PostgresSaver | None = None
+
+
+def _allow_checkpoint_model_type(model_cls: type[BaseModel]) -> None:
+    """Allow dynamic response-format model classes in LangGraph msgpack serde.
+
+    LangGraph warns today (and will block in a future release) when restoring
+    checkpoint state containing unregistered dynamic classes.
+    """
+    saver = _get_checkpointer()
+    serde = getattr(saver, "serde", None)
+    if serde is None:
+        return
+
+    allowed = getattr(serde, "allowed_msgpack_modules", None)
+    if allowed is None:
+        logger.debug("Checkpointer serde has no allowed_msgpack_modules; skipping type registration")
+        return
+
+    entry = (model_cls.__module__, model_cls.__name__)
+    if entry in allowed:
+        return
+
+    if hasattr(allowed, "append"):
+        allowed.append(entry)
+    elif hasattr(allowed, "add"):
+        allowed.add(entry)
+    else:
+        logger.warning(
+            "Could not register checkpoint msgpack type %s.%s: unsupported allowlist container %s",
+            model_cls.__module__,
+            model_cls.__name__,
+            type(allowed).__name__,
+        )
+        return
+
+    logger.info(
+        "Registered checkpoint msgpack type: %s.%s",
+        model_cls.__module__,
+        model_cls.__name__,
+    )
 
 
 def init_checkpointer() -> None:
@@ -178,6 +218,7 @@ def build_graph(template: AgentTemplateCreate) -> Any:
     )
 
     if response_format_model is not None:
+        _allow_checkpoint_model_type(response_format_model)
         logger.info(
             "build_graph: response_format=%s (main model handles extraction)",
             response_format_model.__name__,
@@ -389,12 +430,6 @@ def _normalize_structured_result(result: Any) -> dict[str, Any]:
     Also unwraps any JSON-string fields introduced by _StrictObject or
     string-typed schema fields back to native Python objects before serialization.
     """
-    logger.debug(
-        "_normalize: raw nodes='%s' type=%s len=%d",
-        str(data.get("nn_taxonomy", {}).get("nodes", ""))[:200],
-        type(data.get("nn_taxonomy", {}).get("nodes")),
-        len(str(data.get("nn_taxonomy", {}).get("nodes", "")))
-    )
     if isinstance(result, dict):
         unwrapped = _unwrap_string_fields(result)
         logger.debug(

@@ -20,7 +20,7 @@ class Settings(BaseSettings):
         default="FastAPI runtime for LangGraph-based agents",
         validation_alias="APP_DESCRIPTION",
     )
-    app_version: str = Field(default="0.1.1", validation_alias="APP_VERSION")
+    app_version: str = Field(default="1.1.0")
     app_env: str = Field(default="development", validation_alias="APP_ENV")
     log_level: str = Field(default="INFO", validation_alias="LOG_LEVEL")
     log_dir: str = Field(default="/app/logs", validation_alias="LOG_DIR")
@@ -54,7 +54,7 @@ class Settings(BaseSettings):
     )
 
     azure_openai_api_version: str = Field(
-        default="2024-12-01-preview",
+        default="2025-03-01-preview",
         validation_alias="AZURE_OPENAI_API_VERSION",
     )
 
